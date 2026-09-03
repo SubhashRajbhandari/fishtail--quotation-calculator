@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Hotel,
   Plus,
@@ -7,7 +7,9 @@ import {
   Sparkles,
   Info,
   Tag,
-  DollarSign
+  DollarSign,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function PremierSection({
@@ -22,6 +24,7 @@ export default function PremierSection({
   onHotelSelect,
   tripInfo
 }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const getCurrencySymbol = (curr) => {
     switch (curr) {
       case 'NPR': return 'Rs ';
@@ -80,20 +83,36 @@ export default function PremierSection({
   };
 
   return (
-    <div className="card" style={{ border: '2px solid #e2e8f0' }}>
-      {/* Premier Section Banner */}
-      <div className="premier-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+    <div className="card" style={{ border: '2px solid #e2e8f0', transition: 'all 0.2s ease' }}>
+      {/* Premier Section Banner - Clickable Accordion Header */}
+      <div 
+        className="premier-banner" 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '0.75rem',
+          cursor: 'pointer',
+          userSelect: 'none'
+        }}
+        title={isCollapsed ? 'Click to expand Hotel Costing' : 'Click to minimize Hotel Costing'}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <div className="premier-badge">
             <Sparkles size={14} />
             PREMIER PACKAGE
           </div>
-          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>
-            Hotel Accommodation Costing
+          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Hotel Accommodation Costing</span>
+            <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)', padding: '0.15rem 0.5rem', borderRadius: '12px', color: '#e2e8f0' }}>
+              {isCollapsed ? `▼ ${grandTotalNights} Nts • ${currSymbol}${formatCurrency(premierGrandTotal)}` : `▲ ${grandTotalNights} Nts`}
+            </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
           {/* Section Currency Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.25rem 0.6rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(251, 191, 36, 0.4)' }}>
             <span style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 700 }}>Hotel Currency:</span>
@@ -128,9 +147,34 @@ export default function PremierSection({
           }}>
             Supabase `hotels` ({availableHotels.length})
           </span>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCollapsed(!isCollapsed);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{
+              padding: '0.2rem 0.5rem',
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            <span>{isCollapsed ? 'Expand' : 'Collapse'}</span>
+          </button>
         </div>
       </div>
 
+      {!isCollapsed && (
       <div className="card-body" style={{ padding: '1.25rem' }}>
         <div className="table-responsive">
           <table className="table-custom">
@@ -370,6 +414,7 @@ export default function PremierSection({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

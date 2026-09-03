@@ -573,6 +573,7 @@ export default function App() {
             transportItems={transportItems}
             availableTransportRoutes={availableTransportRoutes}
             availableHotels={availableHotels}
+            hotelRows={hotelRows}
             availableItineraryTemplates={itineraryTemplates}
             onCreateTemplate={handleCreateTemplate}
             onUpdateTemplate={handleUpdateTemplate}

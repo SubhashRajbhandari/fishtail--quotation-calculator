@@ -9,8 +9,16 @@ const LOCAL_STORAGE_ITINERARY_TEMPLATES_BACKUP = 'fishtail_local_itinerary_templ
 
 // Retrieve credentials
 export function getStoredConfig() {
-  const url = localStorage.getItem(LOCAL_STORAGE_KEY_URL) || import.meta.env.VITE_SUPABASE_URL || '';
-  const key = localStorage.getItem(LOCAL_STORAGE_KEY_KEY) || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const url = localStorage.getItem(LOCAL_STORAGE_KEY_URL) 
+    || import.meta.env.VITE_SUPABASE_URL 
+    || import.meta.env.NEXT_PUBLIC_SUPABASE_URL 
+    || '';
+  const key = localStorage.getItem(LOCAL_STORAGE_KEY_KEY) 
+    || import.meta.env.VITE_SUPABASE_ANON_KEY 
+    || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY 
+    || import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY 
+    || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
+    || '';
   return { url, key };
 }
 
@@ -45,14 +53,84 @@ export function getSupabaseClient() {
 export async function testConnection(url, key) {
   try {
     const testClient = createClient(url, key);
-    const { data, error } = await testClient.from('hotels').select('count', { count: 'exact', head: true });
-    if (error) {
-      return { success: false, message: error.message };
+    const results = {
+      hotels: false,
+      transport_routes: false,
+      itinerary_templates: false
+    };
+    
+    const [hRes, tRes, iRes] = await Promise.all([
+      testClient.from('hotels').select('count', { count: 'exact', head: true }),
+      testClient.from('transport_routes').select('count', { count: 'exact', head: true }),
+      testClient.from('itinerary_templates').select('count', { count: 'exact', head: true })
+    ]);
+
+    results.hotels = !hRes.error;
+    results.transport_routes = !tRes.error;
+    results.itinerary_templates = !iRes.error;
+
+    if (results.hotels && results.transport_routes && results.itinerary_templates) {
+      return { 
+        success: true, 
+        message: 'Connected successfully to Supabase! All tables (hotels, transport_routes, itinerary_templates) verified and live.',
+        tables: results
+      };
+    } else if (results.hotels || results.transport_routes || results.itinerary_templates) {
+      const missing = [];
+      if (!results.hotels) missing.push('hotels');
+      if (!results.transport_routes) missing.push('transport_routes');
+      if (!results.itinerary_templates) missing.push('itinerary_templates');
+      return {
+        success: true,
+        partial: true,
+        message: `Connected! Found active tables, but missing: ${missing.join(', ')}. Run the full SQL schema in Supabase SQL Editor.`,
+        tables: results
+      };
+    } else {
+      return {
+        success: false,
+        message: hRes.error?.message || 'Could not query tables. Please run the supabase_schema.sql script in Supabase SQL Editor.',
+        tables: results
+      };
     }
-    return { success: true, message: 'Connected successfully to Supabase!' };
   } catch (err) {
     return { success: false, message: err.message || 'Connection failed' };
   }
+}
+
+// Seed All Sample Master Data to Supabase in one operation
+export async function seedAllSupabaseData() {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase client not connected. Configure URL & Key first.');
+
+  const results = {
+    hotels: false,
+    transportRoutes: false,
+    itineraryTemplates: false
+  };
+
+  try {
+    await seedSupabaseHotels();
+    results.hotels = true;
+  } catch (err) {
+    console.warn('Hotels seed warning:', err.message);
+  }
+
+  try {
+    await seedSupabaseTransportRoutes();
+    results.transportRoutes = true;
+  } catch (err) {
+    console.warn('Transport routes seed warning:', err.message);
+  }
+
+  try {
+    await seedSupabaseItineraryTemplates();
+    results.itineraryTemplates = true;
+  } catch (err) {
+    console.warn('Itinerary templates seed warning:', err.message);
+  }
+
+  return results;
 }
 
 // ==========================================

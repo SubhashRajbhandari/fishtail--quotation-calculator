@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   MapPin, 
   Calendar, 
@@ -36,6 +36,7 @@ export default function ItineraryPlanningTab({
   transportItems = [],
   availableTransportRoutes = MASTER_TRANSPORT_ROUTES,
   availableHotels = [],
+  hotelRows = [],
   availableItineraryTemplates = MASTER_ITINERARY_TEMPLATES,
   onCreateTemplate,
   onUpdateTemplate,
@@ -55,6 +56,64 @@ export default function ItineraryPlanningTab({
   const templates = availableItineraryTemplates && availableItineraryTemplates.length > 0 
     ? availableItineraryTemplates 
     : MASTER_ITINERARY_TEMPLATES;
+
+  // Extract unique hotels currently selected in Quotation Maker (hotelRows)
+  const selectedQuotationHotels = useMemo(() => {
+    const list = [];
+    const seen = new Set();
+
+    (hotelRows || []).forEach(row => {
+      const matched = (availableHotels || []).find(
+        h => h.id === row.hotel_id || (row.hotel_name && h.name?.toLowerCase() === row.hotel_name?.toLowerCase())
+      );
+      const hotelName = row.hotel_name || matched?.name;
+      const city = row.city || matched?.city || '';
+
+      if (hotelName && hotelName.trim() && hotelName !== '-- Select Hotel from Supabase --') {
+        const key = `${hotelName.trim().toLowerCase()}|||${city.trim().toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          const formattedValue = city ? `${city} (${hotelName.trim()})` : hotelName.trim();
+          list.push({
+            id: row.hotel_id || row.id,
+            name: hotelName.trim(),
+            city: city.trim(),
+            nights: row.nights,
+            value: formattedValue,
+            display: city ? `${hotelName.trim()} (${city})` : hotelName.trim()
+          });
+        }
+      }
+    });
+
+    return list;
+  }, [hotelRows, availableHotels]);
+
+  // Helper to match current overnightStay string to available options
+  const resolveOvernightValue = (currentValue) => {
+    if (!currentValue) return '';
+    // Exact match by value
+    const match = selectedQuotationHotels.find(h => h.value === currentValue);
+    if (match) return match.value;
+
+    // Match standard status options
+    const standardOptions = [
+      'Flight Home / Departure',
+      'Overnight Journey / In Transit',
+      'No Overnight Stay / Day Tour'
+    ];
+    if (standardOptions.includes(currentValue)) return currentValue;
+
+    // Loose match by hotel name
+    const looseMatch = selectedQuotationHotels.find(h => {
+      const curLower = currentValue.toLowerCase();
+      const nameLower = h.name.toLowerCase();
+      return curLower.includes(nameLower) || nameLower.includes(curLower);
+    });
+    if (looseMatch) return looseMatch.value;
+
+    return currentValue;
+  };
 
   // Meal Options
   const mealOptions = [
@@ -79,6 +138,7 @@ export default function ItineraryPlanningTab({
   // Add a new custom day
   const handleAddDay = () => {
     const nextDayNum = itineraryDays.length + 1;
+    const defaultHotel = selectedQuotationHotels[0]?.value || 'Flight Home / Departure';
     const newDay = {
       id: 'day-custom-' + Date.now(),
       dayNumber: nextDayNum,
@@ -88,7 +148,7 @@ export default function ItineraryPlanningTab({
       description: 'Morning breakfast at hotel. Spend the day exploring local cultural sights, markets, and scenic viewpoints at your own leisure.',
       highlights: ['Sightseeing', 'Leisure & Photography'],
       meals: 'Breakfast (CP)',
-      overnightStay: 'Kathmandu Hotel',
+      overnightStay: defaultHotel,
       city: 'Kathmandu'
     };
     onUpdateItineraryDays([...itineraryDays, newDay]);
@@ -657,18 +717,68 @@ export default function ItineraryPlanningTab({
 
                     {/* Overnight Stay */}
                     <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.3rem', textTransform: 'uppercase' }}>
-                        <Hotel size={13} style={{ color: '#0284c7' }} />
-                        <span>Overnight Stay / Hotel:</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={day.overnightStay || ''}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>
+                          <Hotel size={13} style={{ color: '#0284c7' }} />
+                          <span>Overnight Stay / Hotel:</span>
+                        </label>
+                        {selectedQuotationHotels.length > 0 ? (
+                          <span style={{ fontSize: '0.68rem', color: '#0284c7', background: '#e0f2fe', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 700 }}>
+                            {selectedQuotationHotels.length} Quote Hotel{selectedQuotationHotels.length > 1 ? 's' : ''}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.68rem', color: '#dc2626', background: '#fee2e2', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 700 }}>
+                            No hotels in quote
+                          </span>
+                        )}
+                      </div>
+
+                      <select
+                        className="form-select"
+                        value={resolveOvernightValue(day.overnightStay || '')}
                         onChange={(e) => handleUpdateDay(day.id, 'overnightStay', e.target.value)}
-                        placeholder="e.g. Kathmandu (Hotel Wood Apple)"
-                        style={{ fontSize: '0.85rem', background: '#ffffff' }}
-                      />
+                        style={{ fontSize: '0.85rem', background: '#ffffff', fontWeight: 600, color: '#0f172a' }}
+                      >
+                        <option value="">-- Select Overnight Stay / Hotel --</option>
+                        
+                        {selectedQuotationHotels.length > 0 && (
+                          <optgroup label={`Hotels Selected in Quotation Maker (${selectedQuotationHotels.length})`}>
+                            {selectedQuotationHotels.map((h, hIdx) => (
+                              <option key={'q-hotel-' + hIdx} value={h.value}>
+                                🏨 {h.city ? `${h.city}: ` : ''}{h.name}{h.nights ? ` (${h.nights} nt${h.nights > 1 ? 's' : ''})` : ''}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+
+                        <optgroup label="Standard Travel & Departure Options">
+                          <option value="Flight Home / Departure">✈️ Flight Home / Departure</option>
+                          <option value="Overnight Journey / In Transit">🚌 Overnight Journey / In Transit</option>
+                          <option value="No Overnight Stay / Day Tour">☀️ No Overnight Stay / Day Tour</option>
+                        </optgroup>
+
+                        {/* Preserve existing custom value if not present in options */}
+                        {day.overnightStay && 
+                          !selectedQuotationHotels.some(h => h.value === day.overnightStay || resolveOvernightValue(day.overnightStay) === h.value) &&
+                          !['Flight Home / Departure', 'Overnight Journey / In Transit', 'No Overnight Stay / Day Tour', ''].includes(day.overnightStay) && (
+                            <optgroup label="Custom / Previously Saved">
+                              <option value={day.overnightStay}>📌 {day.overnightStay}</option>
+                            </optgroup>
+                        )}
+                      </select>
+
+                      {selectedQuotationHotels.length === 0 && (
+                        <div style={{ fontSize: '0.72rem', color: '#b91c1c', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span>⚠️ No hotels added in Quotation Maker.</span>
+                          <button
+                            type="button"
+                            onClick={onNavigateToCosting}
+                            style={{ background: 'none', border: 'none', color: '#0284c7', textDecoration: 'underline', padding: 0, cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600 }}
+                          >
+                            Select hotels in Quotation
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

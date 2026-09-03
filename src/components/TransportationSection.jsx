@@ -10,7 +10,9 @@ import {
   CheckCircle,
   Truck,
   ExternalLink,
-  Layers
+  Layers,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { MASTER_TRANSPORT_ROUTES } from '../lib/mockData';
 
@@ -23,6 +25,7 @@ export default function TransportationSection({
   availableTransportRoutes = MASTER_TRANSPORT_ROUTES,
   onOpenTransportRates
 }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [vehicleType, setVehicleType] = useState('car'); // car, scorpio, hiace, coaster, shuttle
   const [acSupplementPercent, setAcSupplementPercent] = useState(20); // default 20%
   const [enableAcSupplement, setEnableAcSupplement] = useState(true);
@@ -191,19 +194,35 @@ export default function TransportationSection({
 
   return (
     <div className="card" style={{ border: '2px solid #e2e8f0', marginTop: '1.5rem', overflow: 'hidden' }}>
-      {/* Premier Section Banner matching Hotel Accommodation */}
-      <div className="premier-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+      {/* Premier Section Banner - Clickable Accordion Header */}
+      <div 
+        className="premier-banner" 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '0.75rem',
+          cursor: 'pointer',
+          userSelect: 'none'
+        }}
+        title={isCollapsed ? 'Click to expand Transport Costing' : 'Click to minimize Transport Costing'}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <div className="premier-badge">
             <Sparkles size={14} />
             TRANSPORTATION PACKAGE
           </div>
-          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>
-            Private Vehicle Routing & Sector Transfers Costing
+          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Private Vehicle Routing & Sector Transfers Costing</span>
+            <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)', padding: '0.15rem 0.5rem', borderRadius: '12px', color: '#e2e8f0' }}>
+              {isCollapsed ? `▼ ${transportItems.length} Sectors • ${currSymbol}${formatCurrency(totalTransport)}` : `▲ ${transportItems.length} Sectors`}
+            </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
           {/* Quick jump to master tariffs tab */}
           {onOpenTransportRates && (
             <button
@@ -258,9 +277,34 @@ export default function TransportationSection({
           }}>
             Master Routes ({routes.length})
           </span>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCollapsed(!isCollapsed);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{
+              padding: '0.2rem 0.5rem',
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            <span>{isCollapsed ? 'Expand' : 'Collapse'}</span>
+          </button>
         </div>
       </div>
 
+      {!isCollapsed && (
       <div className="card-body" style={{ padding: '1.25rem' }}>
         {/* Vehicle Selection Toolbar */}
         <div style={{
@@ -522,6 +566,7 @@ export default function TransportationSection({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
