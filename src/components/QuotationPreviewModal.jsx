@@ -16,6 +16,7 @@ export default function QuotationPreviewModal({
   additionalCurrency = 'INR',
   guideItems,
   guideCurrency = 'INR',
+  itineraryDays = [],
   notes,
   marginPerPax
 }) {
@@ -99,6 +100,7 @@ export default function QuotationPreviewModal({
               additionalCurrency={additionalCurrency}
               guideItems={guideItems}
               guideCurrency={guideCurrency}
+              itineraryDays={itineraryDays}
               notes={notes}
               marginPerPax={marginPerPax}
             />

@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { INITIAL_HOTELS, MASTER_TRANSPORT_ROUTES } from './mockData';
+import { INITIAL_HOTELS, MASTER_TRANSPORT_ROUTES, MASTER_ITINERARY_TEMPLATES } from './mockData';
 
 const LOCAL_STORAGE_KEY_URL = 'fishtail_supabase_url';
 const LOCAL_STORAGE_KEY_KEY = 'fishtail_supabase_anon_key';
 const LOCAL_STORAGE_HOTELS_BACKUP = 'fishtail_local_hotels';
 const LOCAL_STORAGE_TRANSPORT_BACKUP = 'fishtail_local_transport_routes';
+const LOCAL_STORAGE_ITINERARY_TEMPLATES_BACKUP = 'fishtail_local_itinerary_templates';
 
 // Retrieve credentials
 export function getStoredConfig() {
@@ -434,4 +435,147 @@ export async function seedSupabaseTransportRoutes() {
   if (error) throw error;
   return data;
 }
+
+// ==========================================
+// 3. ITINERARY TEMPLATES LOCAL STORAGE & SERVICES
+// ==========================================
+function getLocalItineraryTemplates() {
+  const stored = localStorage.getItem(LOCAL_STORAGE_ITINERARY_TEMPLATES_BACKUP);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+  }
+  localStorage.setItem(LOCAL_STORAGE_ITINERARY_TEMPLATES_BACKUP, JSON.stringify(MASTER_ITINERARY_TEMPLATES));
+  return MASTER_ITINERARY_TEMPLATES;
+}
+
+function saveLocalItineraryTemplates(templates) {
+  localStorage.setItem(LOCAL_STORAGE_ITINERARY_TEMPLATES_BACKUP, JSON.stringify(templates));
+}
+
+function sanitizeItineraryTemplatePayload(templateData) {
+  return {
+    route_identifier: String(templateData.route_identifier || templateData.route_id || 't-1'),
+    route_name: String(templateData.route_name || 'Sector Transfer'),
+    template_name: String(templateData.template_name || 'Custom Plan'),
+    title: String(templateData.title || 'Day Tour Schedule'),
+    description: String(templateData.description || ''),
+    highlights: Array.isArray(templateData.highlights) ? templateData.highlights : (templateData.highlights ? [templateData.highlights] : []),
+    meals: String(templateData.meals || 'Breakfast (CP)'),
+    city: String(templateData.city || 'Kathmandu'),
+    is_default: Boolean(templateData.is_default)
+  };
+}
+
+// Fetch all itinerary templates
+export async function fetchItineraryTemplatesService() {
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('itinerary_templates')
+        .select('*')
+        .order('route_identifier', { ascending: true })
+        .order('is_default', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        return { data, isLive: true, error: null };
+      }
+      if (error) {
+        console.warn('Supabase fetch itinerary_templates error, using local fallback:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase itinerary templates network error, using local fallback:', err);
+    }
+  }
+
+  return { data: getLocalItineraryTemplates(), isLive: false, error: null };
+}
+
+// Create new itinerary template preset
+export async function createItineraryTemplateService(templateData) {
+  const client = getSupabaseClient();
+  const payload = sanitizeItineraryTemplatePayload(templateData);
+
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('itinerary_templates')
+        .insert([payload])
+        .select()
+        .single();
+      if (!error && data) {
+        return { data, isLive: true, error: null };
+      }
+      if (error) throw error;
+    } catch (err) {
+      console.warn('Supabase itinerary template insert failed, saving locally:', err.message);
+    }
+  }
+
+  const localList = getLocalItineraryTemplates();
+  const created = { ...payload, id: 'itpl-loc-' + Date.now() };
+  const updatedList = [created, ...localList];
+  saveLocalItineraryTemplates(updatedList);
+  return { data: created, isLive: false, error: null };
+}
+
+// Update existing itinerary template
+export async function updateItineraryTemplateService(id, templateData) {
+  const client = getSupabaseClient();
+  const payload = sanitizeItineraryTemplatePayload(templateData);
+
+  if (client && !String(id).startsWith('itpl-loc-') && !String(id).startsWith('itpl-')) {
+    try {
+      const { data, error } = await client
+        .from('itinerary_templates')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+      if (!error && data) {
+        return { data, isLive: true, error: null };
+      }
+    } catch (err) {
+      console.warn('Supabase itinerary template update failed:', err);
+    }
+  }
+
+  const localList = getLocalItineraryTemplates();
+  const updatedList = localList.map(t => t.id === id ? { ...t, ...payload } : t);
+  saveLocalItineraryTemplates(updatedList);
+  return { data: { id, ...payload }, isLive: false, error: null };
+}
+
+// Delete itinerary template
+export async function deleteItineraryTemplateService(id) {
+  const client = getSupabaseClient();
+  if (client && !String(id).startsWith('itpl-loc-') && !String(id).startsWith('itpl-')) {
+    try {
+      await client.from('itinerary_templates').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Supabase itinerary template delete failed:', err);
+    }
+  }
+
+  const localList = getLocalItineraryTemplates();
+  const updatedList = localList.filter(t => t.id !== id);
+  saveLocalItineraryTemplates(updatedList);
+  return { success: true };
+}
+
+// Seed initial itinerary templates into Supabase
+export async function seedSupabaseItineraryTemplates() {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase client not connected. Configure URL & Key first.');
+
+  const seedPayload = MASTER_ITINERARY_TEMPLATES.map(({ id, ...rest }) => sanitizeItineraryTemplatePayload(rest));
+  const { data, error } = await client.from('itinerary_templates').insert(seedPayload).select();
+  if (error) throw error;
+  return data;
+}
+
 

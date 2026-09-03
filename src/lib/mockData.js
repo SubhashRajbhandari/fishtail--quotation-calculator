@@ -223,7 +223,7 @@ export const INITIAL_HOTEL_ROWS = [
   }
 ];
 
-// Master Transportation Rates (Tariffs based in Nepalese Rupees - NPR)
+// Master Transportation Rates with Pre-Saved Itinerary Templates (Tariffs based in NPR)
 export const MASTER_TRANSPORT_ROUTES = [
   { 
     id: 't-1', 
@@ -232,7 +232,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 1000, scorpio_npr: 1500, hiace_npr: 1750, coaster_npr: 2250, shuttle_npr: 2750, 
     car_inr: 625, scorpio_inr: 938, hiace_inr: 1094, coaster_inr: 1406, shuttle_inr: 1719,
     base_car_npr: 1000, base_scorpio_npr: 1500, base_hiace_npr: 1750, base_coaster_npr: 2250, base_shuttle_npr: 2750,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Airport to Hotel transfer'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Airport to Hotel transfer',
+    default_itinerary_title: 'Arrival in Kathmandu & Transfer to Hotel',
+    default_itinerary_desc: 'Warm traditional welcome on arrival at Tribhuvan International Airport (KTM) with marigold garlands. Meet our representative and transfer by private vehicle to your hotel. Complete check-in formalities, enjoy a welcome beverage, and receive a comprehensive trip briefing. Evening free to stroll through the vibrant lanes of Thamel.',
+    default_highlights: ['Airport Welcome Garland', 'Private Hotel Transfer', 'Trip Orientation', 'Thamel Evening Walk'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Kathmandu'
   },
   { 
     id: 't-2', 
@@ -241,7 +246,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 4000, scorpio_npr: 6000, hiace_npr: 7000, coaster_npr: 9000, shuttle_npr: 11000, 
     car_inr: 2500, scorpio_inr: 3750, hiace_inr: 4375, coaster_inr: 5625, shuttle_inr: 6875,
     base_car_npr: 4000, base_scorpio_npr: 6000, base_hiace_npr: 7000, base_coaster_npr: 9000, base_shuttle_npr: 11000,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Pashupatinath, Boudhanath, Swayambhu, Durbar Sq'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Pashupatinath, Boudhanath, Swayambhu, Durbar Sq',
+    default_itinerary_title: 'Kathmandu Valley UNESCO World Heritage Cultural Tour',
+    default_itinerary_desc: 'After breakfast at hotel, embark on a full-day guided exploration of Kathmandu Valley’s UNESCO World Heritage treasures. Visit the sacred Hindu shrine of Pashupatinath along the Bagmati River, circumambulate the massive Buddhist dome of Boudhanath Stupa, explore ancient Kathmandu Durbar Square with the Kumari Ghar, and witness breathtaking sunset views from the hilltop Swayambhunath (Monkey Temple).',
+    default_highlights: ['Pashupatinath Temple', 'Boudhanath Stupa', 'Kathmandu Durbar Square', 'Swayambhunath Stupa'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Kathmandu'
   },
   { 
     id: 't-3', 
@@ -250,7 +260,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 2000, scorpio_npr: 3000, hiace_npr: 3500, coaster_npr: 4500, shuttle_npr: 5500, 
     car_inr: 1250, scorpio_inr: 1875, hiace_inr: 2188, coaster_inr: 2813, shuttle_inr: 3438,
     base_car_npr: 2000, base_scorpio_npr: 3000, base_hiace_npr: 3500, base_coaster_npr: 4500, base_shuttle_npr: 5500,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Davis Falls, Gupteshwor, Seti River gorge'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Davis Falls, Gupteshwor, Seti River gorge',
+    default_itinerary_title: 'Pokhara City Highlights & Shanti Stupa Sightseeing',
+    default_itinerary_desc: 'Morning drive from hotel to Davis Falls (Patale Chhango) to watch the cascading torrent plunge into an underground tunnel. Explore the sacred Gupteshwor Mahadev Cave directly opposite, visit the deep geological chasm of Seti River Gorge, and stop by the Tibetan Refugee Settlement. Enjoy a delicious lakeside lunch, then take a scenic drive up to the World Peace Pagoda (Shanti Stupa) for panoramic views of Phewa Lake and the Annapurna range.',
+    default_highlights: ["Davis Falls", "Gupteshwor Mahadev Cave", "Seti River Gorge", "World Peace Pagoda (Shanti Stupa)"],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Pokhara'
   },
   { 
     id: 't-4', 
@@ -259,7 +274,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 6500, scorpio_npr: 9750, hiace_npr: 11375, coaster_npr: 14625, shuttle_npr: 17875, 
     car_inr: 4063, scorpio_inr: 6094, hiace_inr: 7109, coaster_inr: 9141, shuttle_inr: 11172,
     base_car_npr: 6500, base_scorpio_npr: 9750, base_hiace_npr: 11375, base_coaster_npr: 14625, base_shuttle_npr: 17875,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Early morning sunrise viewing trip'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Early morning sunrise viewing trip',
+    default_itinerary_title: 'Sarangkot Sunrise Mountain View & Phewa Lake Boating',
+    default_itinerary_desc: 'Early morning (05:00 AM) drive up to Sarangkot hilltop viewpoint. Witness the spellbinding golden sunrise illuminating the towering peaks of Annapurna I, II, III, IV, Dhaulagiri, and the sacred Machhapuchhre (Fishtail). Return to the hotel for a hearty breakfast. Afternoon tranquil 1-hour boat ride on Phewa Lake with a visit to the island temple of Tal Barahi.',
+    default_highlights: ['Sarangkot Sunrise Over Annapurnas', 'Fishtail Peak Panorama', 'Phewa Lake Boating', 'Tal Barahi Island Temple'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Pokhara'
   },
   { 
     id: 't-5', 
@@ -268,7 +288,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 2500, scorpio_npr: 3750, hiace_npr: 4375, coaster_npr: 5625, shuttle_npr: 6875, 
     car_inr: 1563, scorpio_inr: 2344, hiace_inr: 2734, coaster_inr: 3516, shuttle_inr: 4297,
     base_car_npr: 2500, base_scorpio_npr: 3750, base_hiace_npr: 4375, base_coaster_npr: 5625, base_shuttle_npr: 6875,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Shiva statue and scenic valley view'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Shiva statue and scenic valley view',
+    default_itinerary_title: 'Pumdikot Colossal Shiva Statue & Pokhara Ridge Excursion',
+    default_itinerary_desc: 'Scenic drive along the southern ridge of Pokhara to visit the majestic 108-foot colossal Lord Shiva statue at Pumdikot. Enjoy 360-degree panoramic vistas of the entire Pokhara Valley, Phewa Lake below, and the snow-capped Himalayan horizon. Perfect spot for photography and spiritual tranquility.',
+    default_highlights: ['108-ft Pumdikot Shiva Statue', '360° Pokhara Valley Vista', 'Himalayan Ridge Photography'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Pokhara'
   },
   { 
     id: 't-6', 
@@ -277,7 +302,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 4000, scorpio_npr: 6000, hiace_npr: 7000, coaster_npr: 9000, shuttle_npr: 11000, 
     car_inr: 2500, scorpio_inr: 3750, hiace_inr: 4375, coaster_inr: 5625, shuttle_inr: 6875,
     base_car_npr: 4000, base_scorpio_npr: 6000, base_hiace_npr: 7000, base_coaster_npr: 9000, base_shuttle_npr: 11000,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'City hotel to Cable Car Station round-trip'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'City hotel to Cable Car Station round-trip',
+    default_itinerary_title: 'Chandragiri Hills Cable Car & Himalayan View Excursion',
+    default_itinerary_desc: 'Morning transfer from Kathmandu hotel to Thankot Cable Car base station. Board the scenic 2.5 km gondola lift soaring above lush green forests to reach Chandragiri Top (2,551m). Experience awe-inspiring panoramic vistas of Mount Everest, Ganesh Himal, Langtang, and Manaslu ranges. Visit the historic Bhaleshwor Mahadev Temple, enjoy mountain-top lunch, and return via cable car to Kathmandu.',
+    default_highlights: ['Scenic Gondola Cable Car Ride', 'Bhaleshwor Mahadev Temple', 'Panoramic Everest & Langtang Views'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Kathmandu'
   },
   { 
     id: 't-7', 
@@ -286,7 +316,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 1000, scorpio_npr: 1500, hiace_npr: 1750, coaster_npr: 2250, shuttle_npr: 2750, 
     car_inr: 625, scorpio_inr: 938, hiace_inr: 1094, coaster_inr: 1406, shuttle_inr: 1719,
     base_car_npr: 1000, base_scorpio_npr: 1500, base_hiace_npr: 1750, base_coaster_npr: 2250, base_shuttle_npr: 2750,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Hotel to KTM domestic terminal'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Hotel to KTM domestic terminal',
+    default_itinerary_title: 'Kathmandu to Pokhara Scenic Mountain Flight / Transfer',
+    default_itinerary_desc: 'Breakfast at hotel, private transfer to Kathmandu Domestic Airport. Board the spectacular 25-minute scenic mountain flight to Pokhara with breathtaking views of the central Himalayas. On arrival at Pokhara Airport, meet our local representative and transfer to your lakeside hotel. Free afternoon to enjoy leisurely café hopping by Phewa Lake.',
+    default_highlights: ['Domestic Airport Transfer', 'Scenic Mountain Flight', 'Pokhara Hotel Check-in', 'Lakeside Leisure'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Pokhara'
   },
   { 
     id: 't-8', 
@@ -295,7 +330,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 1500, scorpio_npr: 2250, hiace_npr: 2625, coaster_npr: 3375, shuttle_npr: 4125, 
     car_inr: 938, scorpio_inr: 1406, hiace_inr: 1641, coaster_inr: 2109, shuttle_inr: 2578,
     base_car_npr: 1500, base_scorpio_npr: 2250, base_hiace_npr: 2625, base_coaster_npr: 3375, base_shuttle_npr: 4125,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Pokhara hotel to airport drop'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Pokhara hotel to airport drop',
+    default_itinerary_title: 'Pokhara Departure to Kathmandu / Next Destination',
+    default_itinerary_desc: 'Enjoy morning breakfast overlooking the tranquil Phewa Lake. Check out from Pokhara hotel and transfer by private vehicle to Pokhara Domestic Airport for your scheduled return flight to Kathmandu or onward travel.',
+    default_highlights: ['Hotel Check-out', 'Pokhara Airport Private Transfer', 'Departure Flight Assistance'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Kathmandu'
   },
   { 
     id: 't-9', 
@@ -304,7 +344,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 1000, scorpio_npr: 1500, hiace_npr: 1750, coaster_npr: 2250, shuttle_npr: 2750, 
     car_inr: 625, scorpio_inr: 938, hiace_inr: 1094, coaster_inr: 1406, shuttle_inr: 1719,
     base_car_npr: 1000, base_scorpio_npr: 1500, base_hiace_npr: 1750, base_coaster_npr: 2250, base_shuttle_npr: 2750,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Arrival pick-up from domestic airport'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Arrival pick-up from domestic airport',
+    default_itinerary_title: 'Arrival in Kathmandu & Souvenir Shopping',
+    default_itinerary_desc: 'Meet our driver upon arrival at Kathmandu Domestic Terminal and transfer to your hotel. Afternoon is free for last-minute souvenir shopping in Thamel and Basantapur for authentic Pashmina shawls, singing bowls, tea, and handicrafts.',
+    default_highlights: ['Domestic Airport Pickup', 'Hotel Transfer', 'Thamel Souvenir Shopping'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Kathmandu'
   },
   { 
     id: 't-10', 
@@ -313,7 +358,12 @@ export const MASTER_TRANSPORT_ROUTES = [
     car_npr: 1000, scorpio_npr: 1500, hiace_npr: 1750, coaster_npr: 2250, shuttle_npr: 2750, 
     car_inr: 625, scorpio_inr: 938, hiace_inr: 1094, coaster_inr: 1406, shuttle_inr: 1719,
     base_car_npr: 1000, base_scorpio_npr: 1500, base_hiace_npr: 1750, base_coaster_npr: 2250, base_shuttle_npr: 2750,
-    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Hotel to Tribhuvan Int. Airport'
+    season_note: 'Standard Tariff', is_custom_rate: false, notes: 'Hotel to Tribhuvan Int. Airport',
+    default_itinerary_title: 'Final Departure from Kathmandu with Golden Memories',
+    default_itinerary_desc: 'Savor your final breakfast in Nepal. Depending on your flight schedule, enjoy any remaining free time for packing and exploration. Our private vehicle will pick you up from the hotel 3 hours prior to your international flight departure and transfer you to Tribhuvan International Airport (KTM) for your journey home.',
+    default_highlights: ['Hotel Check-out', 'Tribhuvan International Airport Transfer', 'Farewell Nepal'],
+    default_meals: 'Breakfast (CP)',
+    default_city: 'Departure'
   }
 ];
 
@@ -354,3 +404,359 @@ export const MASTER_GUIDE_OPTIONS = [
 export const INITIAL_GUIDE_ITEMS = [
   { id: 'gi-1', guide_id: 'g-3', name: 'Licensed Tour Escort (KTM + PKR Valley)', rate_per_day_inr: 2000, days: 3, notes: 'Kathmandu + Pokhara valley tours' }
 ];
+
+// Helper to generate day-by-day itinerary from active transport sectors
+export function generateItineraryFromTransport(transportItems = [], availableRoutes = MASTER_TRANSPORT_ROUTES, hotelRows = []) {
+  if (!transportItems || transportItems.length === 0) {
+    return [];
+  }
+
+  // Create lookup for hotel per city
+  const hotelsByCity = {};
+  hotelRows.forEach(row => {
+    if (row.city && row.hotel_name) {
+      hotelsByCity[row.city.toLowerCase()] = row.hotel_name;
+    }
+  });
+
+  return transportItems.map((item, index) => {
+    const matchedRoute = (availableRoutes || MASTER_TRANSPORT_ROUTES).find(r => r.id === item.route_id || r.name === item.name) || MASTER_TRANSPORT_ROUTES[0];
+    const dayNumber = index + 1;
+    const city = matchedRoute?.default_city || matchedRoute?.category || 'Kathmandu';
+    const hotelForCity = hotelsByCity[city.toLowerCase()] || (city.toLowerCase().includes('pokhara') ? 'Trekkers Inn' : 'Hotel Wood Apple');
+
+    return {
+      id: 'day-' + (item.id || index + 1),
+      transportItemId: item.id,
+      dayNumber: dayNumber,
+      title: matchedRoute?.default_itinerary_title || `${item.name}`,
+      transportRouteId: item.route_id || matchedRoute?.id || '',
+      transportRouteName: item.name || matchedRoute?.name || 'Sector Transfer',
+      description: matchedRoute?.default_itinerary_desc || `Private sector transfer and exploration for ${item.name}. Enjoy scheduled sightseeing with our experienced chauffeur.`,
+      highlights: matchedRoute?.default_highlights || [item.name],
+      meals: matchedRoute?.default_meals || 'Breakfast (CP)',
+      overnightStay: city === 'Departure' ? 'Flight Home / Departure' : `${city} (${hotelForCity})`,
+      city: city
+    };
+  });
+}
+
+// Smart sync that removes deleted transport days, adds new ones, updates changed routes, and preserves custom user edits
+export function syncItineraryWithTransportList(newTransportItems = [], currentItineraryDays = [], availableRoutes = MASTER_TRANSPORT_ROUTES, hotelRows = []) {
+  if (!newTransportItems || newTransportItems.length === 0) {
+    // Keep only custom days without transportItemId
+    const customOnly = (currentItineraryDays || []).filter(d => !d.transportItemId);
+    return customOnly.map((d, idx) => ({ ...d, dayNumber: idx + 1 }));
+  }
+
+  const hotelsByCity = {};
+  hotelRows.forEach(row => {
+    if (row.city && row.hotel_name) {
+      hotelsByCity[row.city.toLowerCase()] = row.hotel_name;
+    }
+  });
+
+  const existingDaysMap = new Map();
+  (currentItineraryDays || []).forEach(day => {
+    if (day.transportItemId) {
+      existingDaysMap.set(day.transportItemId, day);
+    }
+  });
+
+  const activeTransportIds = new Set(newTransportItems.map(item => item.id));
+
+  const syncedDays = [];
+
+  newTransportItems.forEach((item, index) => {
+    const existing = existingDaysMap.get(item.id);
+    const matchedRoute = (availableRoutes || MASTER_TRANSPORT_ROUTES).find(r => r.id === item.route_id || r.name === item.name) || MASTER_TRANSPORT_ROUTES[0];
+    const city = matchedRoute?.default_city || matchedRoute?.category || 'Kathmandu';
+    const hotelForCity = hotelsByCity[city.toLowerCase()] || (city.toLowerCase().includes('pokhara') ? 'Trekkers Inn' : 'Hotel Wood Apple');
+
+    if (existing) {
+      // If the route was switched on this transport item
+      const routeChanged = existing.transportRouteId !== item.route_id && item.route_id;
+      syncedDays.push({
+        ...existing,
+        dayNumber: index + 1,
+        transportItemId: item.id,
+        transportRouteId: item.route_id || matchedRoute?.id || '',
+        transportRouteName: item.name || matchedRoute?.name || '',
+        title: routeChanged ? (matchedRoute?.default_itinerary_title || item.name) : existing.title,
+        description: routeChanged ? (matchedRoute?.default_itinerary_desc || existing.description) : existing.description,
+        highlights: routeChanged ? (matchedRoute?.default_highlights || existing.highlights) : existing.highlights,
+        meals: routeChanged ? (matchedRoute?.default_meals || existing.meals) : existing.meals,
+        overnightStay: existing.overnightStay || (city === 'Departure' ? 'Flight Home / Departure' : `${city} (${hotelForCity})`),
+        city: city
+      });
+    } else {
+      // Create new itinerary day for newly added transport sector
+      syncedDays.push({
+        id: 'day-' + item.id,
+        transportItemId: item.id,
+        dayNumber: index + 1,
+        title: matchedRoute?.default_itinerary_title || `${item.name}`,
+        transportRouteId: item.route_id || matchedRoute?.id || '',
+        transportRouteName: item.name || matchedRoute?.name || 'Sector Transfer',
+        description: matchedRoute?.default_itinerary_desc || `Private sector transfer and exploration for ${item.name}.`,
+        highlights: matchedRoute?.default_highlights || [item.name],
+        meals: matchedRoute?.default_meals || 'Breakfast (CP)',
+        overnightStay: city === 'Departure' ? 'Flight Home / Departure' : `${city} (${hotelForCity})`,
+        city: city
+      });
+    }
+  });
+
+  // Preserve any purely custom user-added days that don't have transportItemId
+  const customDays = (currentItineraryDays || []).filter(d => !d.transportItemId);
+  const combined = [...syncedDays, ...customDays].map((d, idx) => ({
+    ...d,
+    dayNumber: idx + 1
+  }));
+
+  return combined;
+}
+
+// Master Multi-Variant Itinerary Presets Catalog
+export const MASTER_ITINERARY_TEMPLATES = [
+  // 1. ARRIVAL Presets
+  {
+    id: 'itpl-1-1',
+    route_identifier: 't-1',
+    route_name: 'ARRIVAL - KTM Airport Pick-up',
+    template_name: 'Standard Welcome & Thamel Stroll',
+    title: 'Arrival in Kathmandu & Transfer to Hotel',
+    description: 'Warm traditional welcome on arrival at Tribhuvan International Airport (KTM) with marigold garlands. Meet our representative and transfer by private vehicle to your hotel. Complete check-in formalities, enjoy a welcome beverage, and receive a comprehensive trip briefing. Evening free to stroll through the vibrant lanes of Thamel.',
+    highlights: ['Airport Welcome Garland', 'Private Hotel Transfer', 'Trip Orientation', 'Thamel Evening Walk'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: true
+  },
+  {
+    id: 'itpl-1-2',
+    route_identifier: 't-1',
+    route_name: 'ARRIVAL - KTM Airport Pick-up',
+    template_name: 'VIP Welcome & Authentic Cultural Dinner',
+    title: 'VIP Airport Reception & Authentic Cultural Dinner',
+    description: 'Arrive at Kathmandu International Airport. Receive a royal welcome with silk Khadas and flower garlands. Private transfer to your luxury hotel. In the evening, attend a special welcome Nepali dinner at a traditional palace restaurant featuring live cultural folk music and ethnic dance performances.',
+    highlights: ['Silk Khada & Garland Welcome', 'Executive Transfer', 'Traditional Nepali Dinner', 'Live Folk Cultural Dance'],
+    meals: 'Dinner Included (MAP)',
+    city: 'Kathmandu',
+    is_default: false
+  },
+
+  // 2. KTM FULL DAY SS Presets
+  {
+    id: 'itpl-2-1',
+    route_identifier: 't-2',
+    route_name: 'KTM SS - FULL DAY Sightseeing',
+    template_name: 'Classic 4 UNESCO Heritage Sites',
+    title: 'Kathmandu Valley UNESCO World Heritage Cultural Tour',
+    description: 'After breakfast at hotel, embark on a full-day guided exploration of Kathmandu Valley’s UNESCO World Heritage treasures. Visit the sacred Hindu shrine of Pashupatinath along the Bagmati River, circumambulate the massive Buddhist dome of Boudhanath Stupa, explore ancient Kathmandu Durbar Square with the Kumari Ghar, and witness breathtaking sunset views from the hilltop Swayambhunath (Monkey Temple).',
+    highlights: ['Pashupatinath Temple', 'Boudhanath Stupa', 'Kathmandu Durbar Square', 'Swayambhunath Stupa'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: true
+  },
+  {
+    id: 'itpl-2-2',
+    route_identifier: 't-2',
+    route_name: 'KTM SS - FULL DAY Sightseeing',
+    template_name: 'Medieval Royalty: Bhaktapur & Patan Cities',
+    title: 'Medieval Royalty & Architectural Marvels of Bhaktapur and Patan',
+    description: 'Spend the day discovering the ancient royal city of Bhaktapur with its 55-Window Palace, Golden Gate, and soaring Nyatapola Temple. In the afternoon, visit Patan Durbar Square, the City of Fine Arts, to admire the Krishna Mandir, Golden Temple, and traditional bronze craft workshops.',
+    highlights: ['Bhaktapur 55-Window Palace', 'Nyatapola Temple', 'Patan Durbar Square', 'Traditional Metalcraft Workshops'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: false
+  },
+  {
+    id: 'itpl-2-3',
+    route_identifier: 't-2',
+    route_name: 'KTM SS - FULL DAY Sightseeing',
+    template_name: 'Spiritual Heritage: Boudha, Pashupati & Kirtipur',
+    title: 'Spiritual Kathmandu & Ancient Newari Hill-Town Kirtipur',
+    description: 'Morning prayer meditation and kora around the colossal Boudhanath Stupa. Visit Pashupatinath to observe holy Sadhus and sacred rituals. In the afternoon, explore the fortified hilltop Newari settlement of Kirtipur with its cobblestone alleys, Chilamchu stupa, and panoramic valley outlook.',
+    highlights: ['Boudhanath Kora', 'Pashupatinath Sacred Shrines', 'Kirtipur Historic Town', 'Panoramic Views'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: false
+  },
+
+  // 3. PKR HALF DAY SS Presets
+  {
+    id: 'itpl-3-1',
+    route_identifier: 't-3',
+    route_name: 'PKR HALF DAY Sightseeing',
+    template_name: 'Standard Heritage, Falls & Shanti Stupa',
+    title: 'Pokhara City Highlights & Shanti Stupa Sightseeing',
+    description: 'Morning drive from hotel to Davis Falls (Patale Chhango) to watch the cascading torrent plunge into an underground tunnel. Explore the sacred Gupteshwor Mahadev Cave directly opposite, visit the deep geological chasm of Seti River Gorge, and stop by the Tibetan Refugee Settlement. Enjoy a delicious lakeside lunch, then take a scenic drive up to the World Peace Pagoda (Shanti Stupa) for panoramic views of Phewa Lake and the Annapurna range.',
+    highlights: ['Davis Falls', 'Gupteshwor Mahadev Cave', 'Seti River Gorge', 'World Peace Pagoda (Shanti Stupa)'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: true
+  },
+  {
+    id: 'itpl-3-2',
+    route_identifier: 't-3',
+    route_name: 'PKR HALF DAY Sightseeing',
+    template_name: 'Tibetan Culture & Old Pokhara Bazaar',
+    title: 'Tibetan Cultural Immersion & Old Pokhara Heritage',
+    description: 'Explore the historic Old Pokhara Bazaar and the ancient Bindhyabasini Temple. Visit the vibrant Tibetan Refugee Camp to observe traditional carpet weaving and handicraft making. Ascend to the peaceful Matepani Buddhist Monastery atop a hillock overlooking the valley to hear monks chanting afternoon prayers.',
+    highlights: ['Bindhyabasini Temple', 'Old Pokhara Bazaar', 'Tibetan Refugee Handicrafts', 'Matepani Buddhist Monastery'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: false
+  },
+  {
+    id: 'itpl-3-3',
+    route_identifier: 't-3',
+    route_name: 'PKR HALF DAY Sightseeing',
+    template_name: 'Pumdikot Shiva Statue & Begnas Lake Serenity',
+    title: 'Pumdikot 108-ft Shiva Statue & Begnas Lake Escape',
+    description: 'Scenic drive up to Pumdikot to marvel at the 108-foot colossal Lord Shiva statue with 360-degree vistas. Continue to Davis Falls and Gupteshwor Cave, followed by a scenic drive to the serene, crowd-free Begnas Lake for a tranquil afternoon boat ride and fresh fish lunch.',
+    highlights: ['108-ft Pumdikot Shiva Statue', 'Davis Falls & Cave', 'Tranquil Begnas Lake Boating', 'Scenic Mountain Vistas'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: false
+  },
+
+  // 4. SARANKOT SUNRISE Presets
+  {
+    id: 'itpl-4-1',
+    route_identifier: 't-4',
+    route_name: 'PKR - SARANKOT Sunrise Excursion',
+    template_name: 'Sunrise Mountain View & Lake Boating',
+    title: 'Sarangkot Sunrise Mountain View & Phewa Lake Boating',
+    description: 'Early morning (05:00 AM) drive up to Sarangkot hilltop viewpoint. Witness the spellbinding golden sunrise illuminating the towering peaks of Annapurna I, II, III, IV, Dhaulagiri, and the sacred Machhapuchhre (Fishtail). Return to the hotel for a hearty breakfast. Afternoon tranquil 1-hour boat ride on Phewa Lake with a visit to the island temple of Tal Barahi.',
+    highlights: ['Sarangkot Sunrise Over Annapurnas', 'Fishtail Peak Panorama', 'Phewa Lake Boating', 'Tal Barahi Island Temple'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: true
+  },
+  {
+    id: 'itpl-4-2',
+    route_identifier: 't-4',
+    route_name: 'PKR - SARANKOT Sunrise Excursion',
+    template_name: 'Sunrise & Tandem Paragliding Adventure',
+    title: 'Sarangkot Sunrise & Thrilling Tandem Paragliding Adventure',
+    description: 'Early sunrise at Sarangkot with Himalayan panorama. Following sunrise, thrill-seekers can strap in for an exhilarating tandem paragliding flight gliding alongside Himalayan eagles above Phewa Lake with stunning GoPro aerial photos and video footage.',
+    highlights: ['Sarangkot Mountain Sunrise', 'Tandem Paragliding Flight', 'Aerial Phewa Lake Views', 'GoPro Photos/Videos'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: false
+  },
+
+  // 5. PUMDIKOT SHIVA Presets
+  {
+    id: 'itpl-5-1',
+    route_identifier: 't-5',
+    route_name: 'PUMDIKOT PKR - Shiva Statue Excursion',
+    template_name: 'Colossal Shiva & Ridge Panoramas',
+    title: 'Pumdikot Colossal Shiva Statue & Pokhara Ridge Excursion',
+    description: 'Scenic drive along the southern ridge of Pokhara to visit the majestic 108-foot colossal Lord Shiva statue at Pumdikot. Enjoy 360-degree panoramic vistas of the entire Pokhara Valley, Phewa Lake below, and the snow-capped Himalayan horizon. Perfect spot for photography and spiritual tranquility.',
+    highlights: ['108-ft Pumdikot Shiva Statue', '360° Pokhara Valley Vista', 'Himalayan Ridge Photography'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: true
+  },
+
+  // 6. CHANDRAGIRI CABLE CAR Presets
+  {
+    id: 'itpl-6-1',
+    route_identifier: 't-6',
+    route_name: 'CHANDRAGIRI CABLE CAR Transfer',
+    template_name: 'Gondola Cable Car & Everest Views',
+    title: 'Chandragiri Hills Cable Car & Himalayan View Excursion',
+    description: 'Morning transfer from Kathmandu hotel to Thankot Cable Car base station. Board the scenic 2.5 km gondola lift soaring above lush green forests to reach Chandragiri Top (2,551m). Experience awe-inspiring panoramic vistas of Mount Everest, Ganesh Himal, Langtang, and Manaslu ranges. Visit the historic Bhaleshwor Mahadev Temple, enjoy mountain-top lunch, and return via cable car to Kathmandu.',
+    highlights: ['Scenic Gondola Cable Car Ride', 'Bhaleshwor Mahadev Temple', 'Panoramic Everest & Langtang Views'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: true
+  },
+  {
+    id: 'itpl-6-2',
+    route_identifier: 't-6',
+    route_name: 'CHANDRAGIRI CABLE CAR Transfer',
+    template_name: 'Cable Car Top & Sunset Photography',
+    title: 'Chandragiri Ridge Exploration & Mountain Sunset',
+    description: 'Afternoon cable car ride ascending into the clouds atop Chandragiri Hill. Explore the lush botanical walking trails, visit the Shiva shrine, and witness a spectacular golden sunset over the Greater Himalayan mountain ranges before descending back.',
+    highlights: ['Gondola Forest Flight', 'Golden Mountain Sunset', 'High-Altitude Walking Trail'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: false
+  },
+
+  // 7. KTM - PKR FLIGHT DROP Presets
+  {
+    id: 'itpl-7-1',
+    route_identifier: 't-7',
+    route_name: 'KTM - PKR Domestic Departure Drop',
+    template_name: 'Scenic Mountain Flight to Pokhara',
+    title: 'Kathmandu to Pokhara Scenic Mountain Flight / Transfer',
+    description: 'Breakfast at hotel, private transfer to Kathmandu Domestic Airport. Board the spectacular 25-minute scenic mountain flight to Pokhara with breathtaking views of the central Himalayas. On arrival at Pokhara Airport, meet our local representative and transfer to your lakeside hotel. Free afternoon to enjoy leisurely café hopping by Phewa Lake.',
+    highlights: ['Domestic Airport Transfer', 'Scenic Mountain Flight', 'Pokhara Hotel Check-in', 'Lakeside Leisure'],
+    meals: 'Breakfast (CP)',
+    city: 'Pokhara',
+    is_default: true
+  },
+
+  // 8. PKR DOMESTIC DROP Presets
+  {
+    id: 'itpl-8-1',
+    route_identifier: 't-8',
+    route_name: 'PKR Domestic Airport Drop',
+    template_name: 'Pokhara Airport Transfer',
+    title: 'Pokhara Departure to Kathmandu / Next Destination',
+    description: 'Enjoy morning breakfast overlooking the tranquil Phewa Lake. Check out from Pokhara hotel and transfer by private vehicle to Pokhara Domestic Airport for your scheduled return flight to Kathmandu or onward travel.',
+    highlights: ['Hotel Check-out', 'Pokhara Airport Private Transfer', 'Departure Flight Assistance'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: true
+  },
+
+  // 9. PKR - KTM ARRIVAL PICKUP Presets
+  {
+    id: 'itpl-9-1',
+    route_identifier: 't-9',
+    route_name: 'PKR - KTM Domestic Arrival Pick-up',
+    template_name: 'Kathmandu Arrival & Souvenir Shopping',
+    title: 'Arrival in Kathmandu & Souvenir Shopping',
+    description: 'Meet our driver upon arrival at Kathmandu Domestic Terminal and transfer to your hotel. Afternoon is free for last-minute souvenir shopping in Thamel and Basantapur for authentic Pashmina shawls, singing bowls, tea, and handicrafts.',
+    highlights: ['Domestic Airport Pickup', 'Hotel Transfer', 'Thamel Souvenir Shopping'],
+    meals: 'Breakfast (CP)',
+    city: 'Kathmandu',
+    is_default: true
+  },
+
+  // 10. DEPARTURE Presets
+  {
+    id: 'itpl-10-1',
+    route_identifier: 't-10',
+    route_name: 'DEPARTURE - KTM International Drop',
+    template_name: 'Standard International Departure Drop',
+    title: 'Final Departure from Kathmandu with Golden Memories',
+    description: 'Savor your final breakfast in Nepal. Depending on your flight schedule, enjoy any remaining free time for packing and exploration. Our private vehicle will pick you up from the hotel 3 hours prior to your international flight departure and transfer you to Tribhuvan International Airport (KTM) for your journey home.',
+    highlights: ['Hotel Check-out', 'Tribhuvan International Airport Transfer', 'Farewell Nepal'],
+    meals: 'Breakfast (CP)',
+    city: 'Departure',
+    is_default: true
+  },
+  {
+    id: 'itpl-10-2',
+    route_identifier: 't-10',
+    route_name: 'DEPARTURE - KTM International Drop',
+    template_name: 'Morning Shopping & Farewell Airport Transfer',
+    title: 'Last-Minute Thamel Shopping & Airport Farewell',
+    description: 'Morning dedicated to last-minute souvenir shopping in Thamel for authentic cashmere pashminas, organic Himalayan teas, handmade paper journals, and prayer flags. Afternoon private transfer to Kathmandu Airport with warm farewells.',
+    highlights: ['Thamel Handicrafts Shopping', 'Pashmina & Tea Buying', 'Airport Farewell Drop'],
+    meals: 'Breakfast (CP)',
+    city: 'Departure',
+    is_default: false
+  }
+];
+
+// Initial Default Itinerary Days for Default Transport Package
+export const INITIAL_ITINERARY_DAYS = generateItineraryFromTransport(INITIAL_TRANSPORT_ITEMS, MASTER_TRANSPORT_ROUTES, INITIAL_HOTEL_ROWS);
+
+

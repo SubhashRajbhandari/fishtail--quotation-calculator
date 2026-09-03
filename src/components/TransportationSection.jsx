@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Car, 
-  Plus, 
-  Trash2, 
-  Zap, 
-  Info, 
-  Sparkles, 
-  ShieldCheck, 
-  CheckCircle, 
+import {
+  Car,
+  Plus,
+  Trash2,
+  Zap,
+  Info,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle,
   Truck,
   ExternalLink,
   Layers
@@ -24,11 +24,11 @@ export default function TransportationSection({
   onOpenTransportRates
 }) {
   const [vehicleType, setVehicleType] = useState('car'); // car, scorpio, hiace, coaster, shuttle
-  const [acSupplementPercent, setAcSupplementPercent] = useState(15); // default 15% in Excel
+  const [acSupplementPercent, setAcSupplementPercent] = useState(20); // default 20%
   const [enableAcSupplement, setEnableAcSupplement] = useState(true);
 
-  const routes = availableTransportRoutes && availableTransportRoutes.length > 0 
-    ? availableTransportRoutes 
+  const routes = availableTransportRoutes && availableTransportRoutes.length > 0
+    ? availableTransportRoutes
     : MASTER_TRANSPORT_ROUTES;
 
   const getCurrencySymbol = (curr) => {
@@ -51,15 +51,15 @@ export default function TransportationSection({
     { id: 'shuttle', name: 'Large Tourist Coach', paxLabel: '21+ Pax', key_npr: 'shuttle_npr', key_inr: 'shuttle_inr' }
   ];
 
-  // Helper to get route standard price based on active vehicle and active currency (base is NPR)
-  const getRoutePrice = (routeId) => {
+  // Helper to get route standard price based on specified vehicle and active currency (base is NPR)
+  const getItemRoutePrice = (routeId, vehType = vehicleType) => {
     const route = routes.find(r => r.id === routeId);
     if (!route) return 1000;
-    const selectedVeh = vehicleOptions.find(v => v.id === vehicleType);
+    const selectedVeh = vehicleOptions.find(v => v.id === vehType) || vehicleOptions[0];
     const keyNpr = selectedVeh ? selectedVeh.key_npr : 'car_npr';
     const baseNpr = route[keyNpr] || route.car_npr || route.car_inr || 1000;
-    
-    if (currency === 'INR') return route[`${selectedVeh?.id || 'car'}_inr`] || Math.round(baseNpr / 1.6);
+
+    if (currency === 'INR') return route[`${selectedVeh.id}_inr`] || Math.round(baseNpr / 1.6);
     if (currency === 'USD') return Math.round(baseNpr / usdRate);
     return baseNpr;
   };
@@ -67,11 +67,12 @@ export default function TransportationSection({
   // Add route item
   const handleAddRoute = () => {
     const defaultRoute = routes[0] || MASTER_TRANSPORT_ROUTES[0];
-    const newRate = getRoutePrice(defaultRoute.id);
+    const newRate = getItemRoutePrice(defaultRoute.id, vehicleType);
     const newItem = {
       id: 'tr-' + Date.now(),
       route_id: defaultRoute.id,
       name: defaultRoute.name,
+      vehicle_type: vehicleType,
       rate_inr: newRate,
       qty: 1,
       notes: 'Standard sector transfer'
@@ -83,7 +84,9 @@ export default function TransportationSection({
   const handleRouteChange = (itemId, routeId) => {
     const matchedRoute = routes.find(r => r.id === routeId);
     if (!matchedRoute) return;
-    const newRate = getRoutePrice(routeId);
+    const currentItem = transportItems.find(it => it.id === itemId);
+    const currentVeh = currentItem?.vehicle_type || vehicleType;
+    const newRate = getItemRoutePrice(routeId, currentVeh);
 
     const updated = transportItems.map(item => {
       if (item.id === itemId) {
@@ -99,25 +102,33 @@ export default function TransportationSection({
     onUpdateTransportItems(updated);
   };
 
-  // Switch vehicle type and auto-update route prices
-  const handleVehicleChange = (newVehType) => {
-    setVehicleType(newVehType);
-    const selectedVeh = vehicleOptions.find(v => v.id === newVehType);
-    const keyNpr = selectedVeh ? selectedVeh.key_npr : 'car_npr';
-
+  // Switch vehicle type individually for a specific row
+  const handleItemVehicleChange = (itemId, newVehType) => {
     const updated = transportItems.map(item => {
-      const matchedRoute = routes.find(r => r.id === item.route_id);
-      if (matchedRoute) {
-        const baseNpr = matchedRoute[keyNpr] || matchedRoute.car_npr || 1000;
-        let finalRate = baseNpr;
-        if (currency === 'INR') finalRate = matchedRoute[`${newVehType}_inr`] || Math.round(baseNpr / 1.6);
-        else if (currency === 'USD') finalRate = Math.round(baseNpr / usdRate);
+      if (item.id === itemId) {
+        const newRate = getItemRoutePrice(item.route_id, newVehType);
         return {
           ...item,
-          rate_inr: finalRate
+          vehicle_type: newVehType,
+          rate_inr: newRate
         };
       }
       return item;
+    });
+    onUpdateTransportItems(updated);
+  };
+
+  // Switch global default vehicle type and auto-update route prices
+  const handleVehicleChange = (newVehType) => {
+    setVehicleType(newVehType);
+
+    const updated = transportItems.map(item => {
+      const newRate = getItemRoutePrice(item.route_id, newVehType);
+      return {
+        ...item,
+        vehicle_type: newVehType,
+        rate_inr: newRate
+      };
     });
     onUpdateTransportItems(updated);
   };
@@ -237,13 +248,13 @@ export default function TransportationSection({
             </select>
           </div>
 
-          <span style={{ 
-            fontSize: '0.75rem', 
-            fontWeight: 700, 
-            background: 'rgba(255, 255, 255, 0.12)', 
-            padding: '0.25rem 0.5rem', 
+          <span style={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            background: 'rgba(255, 255, 255, 0.12)',
+            padding: '0.25rem 0.5rem',
             borderRadius: '4px',
-            color: '#38bdf8' 
+            color: '#38bdf8'
           }}>
             Master Routes ({routes.length})
           </span>
@@ -252,14 +263,14 @@ export default function TransportationSection({
 
       <div className="card-body" style={{ padding: '1.25rem' }}>
         {/* Vehicle Selection Toolbar */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          marginBottom: '1rem', 
-          padding: '0.75rem 1rem', 
-          background: '#f8fafc', 
-          borderRadius: 'var(--radius-md)', 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1rem',
+          padding: '0.75rem 1rem',
+          background: '#f8fafc',
+          borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)',
           flexWrap: 'wrap',
           gap: '0.75rem'
@@ -335,11 +346,31 @@ export default function TransportationSection({
                       </div>
                     </td>
 
-                    {/* Vehicle badge */}
+                    {/* Vehicle Allocation Dropdown */}
                     <td style={{ textAlign: 'center' }}>
-                      <span className="badge-city" style={{ background: '#dbeafe', color: '#1e40af', fontWeight: 700, padding: '0.25rem 0.6rem' }}>
-                        {selectedVehicleObj.name}
-                      </span>
+                      <select
+                        className="form-select"
+                        value={item.vehicle_type || vehicleType}
+                        onChange={(e) => handleItemVehicleChange(item.id, e.target.value)}
+                        style={{
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          padding: '0.3rem 0.5rem',
+                          background: '#eff6ff',
+                          color: '#1d4ed8',
+                          border: '1px solid #bfdbfe',
+                          borderRadius: 'var(--radius-sm)',
+                          width: '100%',
+                          cursor: 'pointer'
+                        }}
+                        title="Change vehicle allocation for this specific sector"
+                      >
+                        {vehicleOptions.map(v => (
+                          <option key={v.id} value={v.id}>
+                            🚗 {v.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
 
                     {/* Sector Cost */}
@@ -411,13 +442,13 @@ export default function TransportationSection({
         </div>
 
         {/* Section Actions & A/C Supplement */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          marginTop: '1.25rem', 
-          flexWrap: 'wrap', 
-          gap: '1rem' 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: '1.25rem',
+          flexWrap: 'wrap',
+          gap: '1rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button

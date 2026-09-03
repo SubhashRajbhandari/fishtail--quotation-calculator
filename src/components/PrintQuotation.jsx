@@ -12,6 +12,7 @@ export default function PrintQuotation({
   additionalCurrency = 'INR',
   guideItems = [],
   guideCurrency = 'INR',
+  itineraryDays = [],
   notes = '',
   marginPerPax = 0
 }) {
@@ -263,7 +264,13 @@ export default function PrintQuotation({
                       <div className="table-main-text">{item.name}</div>
                       {item.notes && <div className="table-sub-text">{item.notes}</div>}
                     </td>
-                    <td>Private A/C Vehicle</td>
+                    <td>
+                      {item.vehicle_type === 'scorpio' ? '4WD Scorpio / SUV' :
+                       item.vehicle_type === 'hiace' ? 'Toyota Hiace Minibus' :
+                       item.vehicle_type === 'coaster' ? 'Toyota Coaster Bus' :
+                       item.vehicle_type === 'shuttle' ? 'Tourist Coach' :
+                       'Private Sedan Car'}
+                    </td>
                     <td style={{ textAlign: 'center' }}>{item.qty || 1}</td>
                     <td style={{ textAlign: 'right', fontWeight: 700 }}>
                       {getCurrencySymbol(transportCurrency)}{formatCurrency((Number(item.rate_inr) || 0) * (Number(item.qty) || 1))}
@@ -332,7 +339,75 @@ export default function PrintQuotation({
           </div>
         )}
 
-        {/* 4. Master Commercial Package Rates Box in NPR */}
+        {/* 4. Detailed Day-by-Day Tour Itinerary */}
+        {itineraryDays && itineraryDays.length > 0 && (
+          <div className="print-section">
+            <h2 className="print-section-title">
+              <span>{additionalItems.length > 0 || guideItems.length > 0 ? '4.' : '3.'} Day-by-Day Tour Itinerary & Schedule</span>
+              <span className="title-sub">({itineraryDays.length} Days Customized Nepal Itinerary)</span>
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.5rem' }}>
+              {itineraryDays.map((day) => (
+                <div 
+                  key={day.id} 
+                  style={{ 
+                    border: '1px solid #cbd5e1', 
+                    borderRadius: '6px', 
+                    padding: '0.6rem 0.85rem', 
+                    background: '#f8fafc',
+                    pageBreakInside: 'avoid'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem', flexWrap: 'wrap', gap: '0.35rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ 
+                        background: '#0f172a', 
+                        color: '#ffffff', 
+                        fontWeight: 800, 
+                        fontSize: '0.75rem', 
+                        padding: '0.15rem 0.45rem', 
+                        borderRadius: '4px' 
+                      }}>
+                        DAY {String(day.dayNumber).padStart(2, '0')}
+                      </span>
+                      <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>{day.title}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem' }}>
+                      {day.meals && (
+                        <span style={{ background: '#ffedd5', color: '#9a3412', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 600 }}>
+                          🍽️ {day.meals}
+                        </span>
+                      )}
+                      {day.overnightStay && (
+                        <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: 600 }}>
+                          🏨 {day.overnightStay}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '0.78rem', color: '#334155', lineHeight: '1.45', margin: '0.2rem 0 0.35rem 0', whiteSpace: 'pre-line' }}>
+                    {day.description}
+                  </p>
+
+                  {day.highlights && day.highlights.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.2rem' }}>
+                      {day.highlights.map((h, hIdx) => (
+                        <span key={hIdx} style={{ fontSize: '0.68rem', color: '#475569', background: '#ffffff', border: '1px solid #e2e8f0', padding: '0.05rem 0.35rem', borderRadius: '3px' }}>
+                          ✓ {h}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Master Commercial Package Rates Box in NPR */}
         <div className="print-pricing-summary" style={{ background: '#0f172a' }}>
           <div className="pricing-summary-header">
             <div>

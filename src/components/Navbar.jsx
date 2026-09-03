@@ -10,7 +10,9 @@ import {
   Layers, 
   Sparkles, 
   Eye, 
-  Car 
+  Car,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 
 export default function Navbar({
@@ -23,7 +25,8 @@ export default function Navbar({
   isRefreshing,
   onRefresh,
   hotelCount,
-  transportRouteCount = 10
+  transportRouteCount = 10,
+  itineraryCount = 6
 }) {
   return (
     <header className="navbar no-print">
@@ -53,12 +56,33 @@ export default function Navbar({
 
           <button
             type="button"
+            onClick={() => onTabChange('itinerary')}
+            className={`btn btn-sm ${activeTab === 'itinerary' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ border: 'none', position: 'relative' }}
+          >
+            <MapPin size={15} />
+            <span>Itinerary Planner</span>
+            <span style={{ 
+              fontSize: '0.65rem', 
+              background: activeTab === 'itinerary' ? '#ffffff' : '#f59e0b', 
+              color: activeTab === 'itinerary' ? '#b45309' : '#000000',
+              fontWeight: 800, 
+              padding: '0.1rem 0.35rem', 
+              borderRadius: '9999px',
+              marginLeft: '0.35rem' 
+            }}>
+              {itineraryCount}D
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => onTabChange('rates')}
             className={`btn btn-sm ${activeTab === 'rates' ? 'btn-primary' : 'btn-secondary'}`}
             style={{ border: 'none', position: 'relative' }}
           >
             <Layers size={15} />
-            <span>Hotel Rates & Seasonality</span>
+            <span>Hotel Rates</span>
             <span style={{ 
               fontSize: '0.65rem', 
               background: activeTab === 'rates' ? '#ffffff' : '#3b82f6', 
@@ -79,7 +103,7 @@ export default function Navbar({
             style={{ border: 'none', position: 'relative' }}
           >
             <Car size={15} />
-            <span>Transport Rates & Fleet</span>
+            <span>Transport Fleet</span>
             <span style={{ 
               fontSize: '0.65rem', 
               background: activeTab === 'transportRates' ? '#ffffff' : '#3b82f6', 
@@ -132,7 +156,7 @@ export default function Navbar({
           </button>
 
           {/* Preview & Print / Export Buttons */}
-          {activeTab === 'quotation' && (
+          {(activeTab === 'quotation' || activeTab === 'itinerary') && (
             <>
               <button 
                 type="button" 

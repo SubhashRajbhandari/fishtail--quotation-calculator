@@ -277,3 +277,146 @@ VALUES
     ('DEPARTURE - KTM International Drop', 'Airport', 'Hotel to Tribhuvan Int. Airport', 'Standard Tariff', 1000, 1500, 1750, 2250, 2750, 625, 938, 1094, 1406, 1719, 1000, 1500, 1750, 2250, 2750)
 ON CONFLICT DO NOTHING;
 
+-- ===================================================================
+-- 7. Itinerary Templates Table (Multiple Variants per Transport Sector)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS public.itinerary_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    route_identifier TEXT NOT NULL, -- e.g. 't-1', 't-2', 't-3' or route name
+    route_name TEXT NOT NULL,
+    template_name TEXT NOT NULL, -- e.g. 'Standard Heritage & Lake', 'Tibetan & Cultural', 'Pumdikot & Begnas'
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    highlights JSONB DEFAULT '[]'::jsonb,
+    meals TEXT DEFAULT 'Breakfast (CP)',
+    city TEXT DEFAULT 'Kathmandu',
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_itinerary_templates_route ON public.itinerary_templates(route_identifier);
+CREATE INDEX IF NOT EXISTS idx_itinerary_templates_route_name ON public.itinerary_templates(route_name);
+
+-- Auto-update trigger for itinerary_templates
+DROP TRIGGER IF EXISTS trigger_update_itinerary_templates_timestamp ON public.itinerary_templates;
+CREATE TRIGGER trigger_update_itinerary_templates_timestamp
+BEFORE UPDATE ON public.itinerary_templates
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable RLS
+ALTER TABLE public.itinerary_templates ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anon full access on itinerary_templates" ON public.itinerary_templates;
+CREATE POLICY "Allow anon full access on itinerary_templates" 
+ON public.itinerary_templates 
+FOR ALL 
+TO anon, authenticated 
+USING (true) 
+WITH CHECK (true);
+
+-- Seed Initial Multi-Variant Itinerary Presets
+INSERT INTO public.itinerary_templates (
+    route_identifier, route_name, template_name, title, description, highlights, meals, city, is_default
+)
+VALUES
+    -- ARRIVAL Presets
+    (
+        't-1', 'ARRIVAL - KTM Airport Pick-up', 'Standard Welcome & Thamel Walk',
+        'Arrival in Kathmandu & Transfer to Hotel',
+        'Warm traditional welcome on arrival at Tribhuvan International Airport (KTM) with marigold garlands. Meet our representative and transfer by private vehicle to your hotel. Complete check-in formalities, enjoy a welcome beverage, and receive a comprehensive trip briefing. Evening free to stroll through the vibrant lanes of Thamel.',
+        '["Airport Welcome Garland", "Private Hotel Transfer", "Trip Orientation", "Thamel Evening Walk"]'::jsonb,
+        'Breakfast (CP)', 'Kathmandu', TRUE
+    ),
+    (
+        't-1', 'ARRIVAL - KTM Airport Pick-up', 'VIP Welcome with Cultural Dinner',
+        'VIP Airport Reception & Authentic Cultural Dinner',
+        'Arrive at Kathmandu International Airport. Receive a royal welcome with silk Khadas and flower garlands. Private transfer to your luxury hotel. In the evening, attend a special welcome Nepali dinner at a traditional palace restaurant featuring live cultural folk music and ethnic dance performances.',
+        '["Silk Khada & Garland Welcome", "Executive Transfer", "Traditional Nepali Dinner", "Live Folk Cultural Dance"]'::jsonb,
+        'Dinner Included (MAP)', 'Kathmandu', FALSE
+    ),
+
+    -- KTM FULL DAY SS Presets
+    (
+        't-2', 'KTM SS - FULL DAY Sightseeing', 'Classic 4 UNESCO Heritage Sites',
+        'Kathmandu Valley UNESCO World Heritage Cultural Tour',
+        'After breakfast at hotel, embark on a full-day guided exploration of Kathmandu Valley’s UNESCO World Heritage treasures. Visit the sacred Hindu shrine of Pashupatinath along the Bagmati River, circumambulate the massive Buddhist dome of Boudhanath Stupa, explore ancient Kathmandu Durbar Square with the Kumari Ghar, and witness breathtaking sunset views from the hilltop Swayambhunath (Monkey Temple).',
+        '["Pashupatinath Temple", "Boudhanath Stupa", "Kathmandu Durbar Square", "Swayambhunath Stupa"]'::jsonb,
+        'Breakfast (CP)', 'Kathmandu', TRUE
+    ),
+    (
+        't-2', 'KTM SS - FULL DAY Sightseeing', 'Medieval Royalty: Bhaktapur & Patan',
+        'Medieval Royalty & Architectural Marvels of Bhaktapur and Patan',
+        'Spend the day discovering the ancient royal city of Bhaktapur with its 55-Window Palace, Golden Gate, and soaring Nyatapola Temple. In the afternoon, visit Patan Durbar Square, the City of Fine Arts, to admire the Krishna Mandir, Golden Temple, and traditional bronze craft workshops.',
+        '["Bhaktapur 55-Window Palace", "Nyatapola Temple", "Patan Durbar Square", "Traditional Metalcraft Workshops"]'::jsonb,
+        'Breakfast (CP)', 'Kathmandu', FALSE
+    ),
+
+    -- PKR HALF DAY SS Presets
+    (
+        't-3', 'PKR HALF DAY Sightseeing', 'Standard Heritage, Falls & Shanti Stupa',
+        'Pokhara City Highlights & Shanti Stupa Sightseeing',
+        'Morning drive from hotel to Davis Falls (Patale Chhango) to watch the cascading torrent plunge into an underground tunnel. Explore the sacred Gupteshwor Mahadev Cave directly opposite, visit the deep geological chasm of Seti River Gorge, and stop by the Tibetan Refugee Settlement. Enjoy a delicious lakeside lunch, then take a scenic drive up to the World Peace Pagoda (Shanti Stupa) for panoramic views of Phewa Lake and the Annapurna range.',
+        '["Davis Falls", "Gupteshwor Mahadev Cave", "Seti River Gorge", "World Peace Pagoda (Shanti Stupa)"]'::jsonb,
+        'Breakfast (CP)', 'Pokhara', TRUE
+    ),
+    (
+        't-3', 'PKR HALF DAY Sightseeing', 'Tibetan Cultural Heritage & Monasteries',
+        'Tibetan Cultural Immersion & Old Pokhara Heritage',
+        'Explore the historic Old Pokhara Bazaar and the ancient Bindhyabasini Temple. Visit the vibrant Tibetan Refugee Camp to observe traditional carpet weaving and handicraft making. Ascend to the peaceful Matepani Buddhist Monastery atop a hillock overlooking the valley to hear monks chanting afternoon prayers.',
+        '["Bindhyabasini Temple", "Old Pokhara Bazaar", "Tibetan Refugee Handicrafts", "Matepani Buddhist Monastery"]'::jsonb,
+        'Breakfast (CP)', 'Pokhara', FALSE
+    ),
+    (
+        't-3', 'PKR HALF DAY Sightseeing', 'Pumdikot Shiva & Begnas Lake Serenity',
+        'Pumdikot 108-ft Shiva Statue & Begnas Lake Escape',
+        'Scenic drive up to Pumdikot to marvel at the 108-foot colossal Lord Shiva statue with 360-degree vistas. Continue to Davis Falls and Gupteshwor Cave, followed by a scenic drive to the serene, crowd-free Begnas Lake for a tranquil afternoon boat ride and fresh fish lunch.',
+        '["108-ft Pumdikot Shiva Statue", "Davis Falls & Cave", "Tranquil Begnas Lake Boating", "Scenic Mountain Vistas"]'::jsonb,
+        'Breakfast (CP)', 'Pokhara', FALSE
+    ),
+
+    -- SARANKOT SUNRISE Presets
+    (
+        't-4', 'PKR - SARANKOT Sunrise Excursion', 'Sunrise Mountain View & Lake Boating',
+        'Sarangkot Sunrise Mountain View & Phewa Lake Boating',
+        'Early morning (05:00 AM) drive up to Sarangkot hilltop viewpoint. Witness the spellbinding golden sunrise illuminating the towering peaks of Annapurna I, II, III, IV, Dhaulagiri, and the sacred Machhapuchhre (Fishtail). Return to the hotel for a hearty breakfast. Afternoon tranquil 1-hour boat ride on Phewa Lake with a visit to the island temple of Tal Barahi.',
+        '["Sarangkot Sunrise Over Annapurnas", "Fishtail Peak Panorama", "Phewa Lake Boating", "Tal Barahi Island Temple"]'::jsonb,
+        'Breakfast (CP)', 'Pokhara', TRUE
+    ),
+    (
+        't-4', 'PKR - SARANKOT Sunrise Excursion', 'Sunrise & Tandem Paragliding Flight',
+        'Sarangkot Sunrise & Thrilling Tandem Paragliding Adventure',
+        'Early sunrise at Sarangkot with Himalayan panorama. Following sunrise, thrill-seekers can strap in for an exhilarating tandem paragliding flight gliding alongside Himalayan eagles above Phewa Lake with stunning GoPro aerial photos and video footage.',
+        '["Sarangkot Mountain Sunrise", "Tandem Paragliding Flight", "Aerial Phewa Lake Views", "GoPro Photos/Videos"]'::jsonb,
+        'Breakfast (CP)', 'Pokhara', FALSE
+    ),
+
+    -- CHANDRAGIRI CABLE CAR Presets
+    (
+        't-6', 'CHANDRAGIRI CABLE CAR Transfer', 'Gondola Ride & Everest Views',
+        'Chandragiri Hills Cable Car & Himalayan View Excursion',
+        'Morning transfer from Kathmandu hotel to Thankot Cable Car base station. Board the scenic 2.5 km gondola lift soaring above lush green forests to reach Chandragiri Top (2,551m). Experience awe-inspiring panoramic vistas of Mount Everest, Ganesh Himal, Langtang, and Manaslu ranges. Visit the historic Bhaleshwor Mahadev Temple, enjoy mountain-top lunch, and return via cable car to Kathmandu.',
+        '["Scenic Gondola Cable Car Ride", "Bhaleshwor Mahadev Temple", "Panoramic Everest & Langtang Views"]'::jsonb,
+        'Breakfast (CP)', 'Kathmandu', TRUE
+    ),
+
+    -- DEPARTURE Presets
+    (
+        't-10', 'DEPARTURE - KTM International Drop', 'Standard International Drop',
+        'Final Departure from Kathmandu with Golden Memories',
+        'Savor your final breakfast in Nepal. Depending on your flight schedule, enjoy any remaining free time for packing and exploration. Our private vehicle will pick you up from the hotel 3 hours prior to your international flight departure and transfer you to Tribhuvan International Airport (KTM) for your journey home.',
+        '["Hotel Check-out", "Tribhuvan International Airport Transfer", "Farewell Nepal"]'::jsonb,
+        'Breakfast (CP)', 'Departure', TRUE
+    ),
+    (
+        't-10', 'DEPARTURE - KTM International Drop', 'Souvenir Shopping & Airport Drop',
+        'Last-Minute Thamel Shopping & Airport Farewell',
+        'Morning dedicated to last-minute souvenir shopping in Thamel for authentic cashmere pashminas, organic Himalayan teas, handmade paper journals, and prayer flags. Afternoon private transfer to Kathmandu Airport with warm farewells.',
+        '["Thamel Handicrafts Shopping", "Pashmina & Tea Buying", "Airport Farewell Drop"]'::jsonb,
+        'Breakfast (CP)', 'Departure', FALSE
+    )
+ON CONFLICT DO NOTHING;
+
+

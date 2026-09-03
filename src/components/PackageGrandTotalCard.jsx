@@ -10,7 +10,10 @@ import {
   Baby, 
   DollarSign, 
   Sparkles,
-  FileCheck2
+  FileCheck2,
+  ArrowRight,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 
 export default function PackageGrandTotalCard({
@@ -27,7 +30,8 @@ export default function PackageGrandTotalCard({
   notes,
   onNotesChange,
   marginPerPax,
-  onMarginChange
+  onMarginChange,
+  onNavigateToItinerary
 }) {
   const getCurrencySymbol = (curr) => {
     switch (curr) {
@@ -313,7 +317,7 @@ export default function PackageGrandTotalCard({
           </div>
 
           {/* Quotation Remarks & Terms Box */}
-          <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem' }}>
               <FileCheck2 size={16} style={{ color: '#2563eb' }} />
               <span>Quotation Inclusions, Terms & Meal Policy</span>
@@ -327,6 +331,53 @@ export default function PackageGrandTotalCard({
               style={{ fontSize: '0.85rem', lineHeight: '1.6' }}
             />
           </div>
+
+          {/* Step 2: Next Itinerary Planning Action Banner */}
+          {onNavigateToItinerary && (
+            <div style={{ 
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
+              borderRadius: 'var(--radius-md)', 
+              padding: '1.25rem 1.5rem', 
+              border: '1px solid #334155',
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              flexWrap: 'wrap', 
+              gap: '1rem' 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <div style={{ background: 'var(--gold-gradient)', color: '#000', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MapPin size={22} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
+                    Finished with Costing & Margins?
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.15rem' }}>
+                    Proceed to <strong>Itinerary Planning</strong> to review, customize, and finalize day-by-day schedules mapped to your transport sectors.
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onNavigateToItinerary}
+                className="btn btn-accent"
+                style={{ 
+                  padding: '0.75rem 1.75rem', 
+                  fontSize: '0.95rem', 
+                  fontWeight: 800, 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.4)'
+                }}
+              >
+                <span>Proceed to Itinerary Planning (Step 2)</span>
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

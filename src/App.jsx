@@ -6,6 +6,7 @@ import TransportationSection from './components/TransportationSection';
 import AdditionalCostsSection from './components/AdditionalCostsSection';
 import GuideSection from './components/GuideSection';
 import PackageGrandTotalCard from './components/PackageGrandTotalCard';
+import ItineraryPlanningTab from './components/ItineraryPlanningTab';
 import HotelRatesTab from './components/HotelRatesTab';
 import TransportationRatesTab from './components/TransportationRatesTab';
 import SupabaseConfigModal from './components/SupabaseConfigModal';
@@ -22,6 +23,10 @@ import {
   updateTransportRouteService,
   deleteTransportRouteService,
   resetTransportRouteToBaseRateService,
+  fetchItineraryTemplatesService,
+  createItineraryTemplateService,
+  updateItineraryTemplateService,
+  deleteItineraryTemplateService,
   isSupabaseConfigured 
 } from './lib/supabase';
 import { 
@@ -29,9 +34,13 @@ import {
   INITIAL_TRANSPORT_ITEMS, 
   INITIAL_ADDITIONAL_ITEMS, 
   INITIAL_GUIDE_ITEMS,
+  INITIAL_ITINERARY_DAYS,
   MASTER_TRANSPORT_ROUTES,
   MASTER_ADDITIONAL_ACTIVITIES,
-  MASTER_GUIDE_OPTIONS
+  MASTER_GUIDE_OPTIONS,
+  MASTER_ITINERARY_TEMPLATES,
+  generateItineraryFromTransport,
+  syncItineraryWithTransportList
 } from './lib/mockData';
 
 export default function App() {
@@ -72,6 +81,24 @@ export default function App() {
 
   // Profit Margin per Pax (in NPR)
   const [marginPerPax, setMarginPerPax] = useState(2500);
+
+  // Day-by-day Itinerary State (Synced from Transportation Packages)
+  const [itineraryDays, setItineraryDays] = useState(INITIAL_ITINERARY_DAYS);
+
+  // Itinerary Templates Catalog (Multi-Variant Presets from Database)
+  const [itineraryTemplates, setItineraryTemplates] = useState(MASTER_ITINERARY_TEMPLATES);
+
+  // Transportation items update handler with automatic itinerary synchronization
+  const handleUpdateTransportItems = (newItems) => {
+    setTransportItems(newItems);
+    setItineraryDays(prevDays => syncItineraryWithTransportList(newItems, prevDays, availableTransportRoutes, hotelRows));
+  };
+
+  // Sync / regenerate itinerary from active transport items
+  const handleSyncItineraryWithTransport = () => {
+    const synced = generateItineraryFromTransport(transportItems, availableTransportRoutes, hotelRows);
+    setItineraryDays(synced);
+  };
 
   // Available Hotels from Supabase
   const [availableHotels, setAvailableHotels] = useState([]);
@@ -126,10 +153,23 @@ export default function App() {
     }
   };
 
+  // Load Itinerary Templates from Supabase / Local Storage
+  const loadItineraryTemplates = async () => {
+    try {
+      const { data, isLive } = await fetchItineraryTemplatesService();
+      if (data && data.length > 0) {
+        setItineraryTemplates(data);
+        if (isLive) setIsLiveSupabase(true);
+      }
+    } catch (err) {
+      console.error('Failed to load itinerary templates:', err);
+    }
+  };
+
   const loadAllData = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([loadHotels(), loadTransportRoutes()]);
+      await Promise.all([loadHotels(), loadTransportRoutes(), loadItineraryTemplates()]);
     } finally {
       setIsRefreshing(false);
     }
@@ -138,6 +178,24 @@ export default function App() {
   useEffect(() => {
     loadAllData();
   }, []);
+
+  // Template CRUD Handlers
+  const handleCreateTemplate = async (templateData) => {
+    const { data } = await createItineraryTemplateService(templateData);
+    if (data) {
+      await loadItineraryTemplates();
+    }
+  };
+
+  const handleUpdateTemplate = async (id, templateData) => {
+    await updateItineraryTemplateService(id, templateData);
+    await loadItineraryTemplates();
+  };
+
+  const handleDeleteTemplate = async (id) => {
+    await deleteItineraryTemplateService(id);
+    await loadItineraryTemplates();
+  };
 
   // Update trip info fields
   const handleTripInfoChange = (field, value) => {
@@ -430,6 +488,7 @@ export default function App() {
         onRefresh={loadAllData}
         hotelCount={availableHotels.length}
         transportRouteCount={availableTransportRoutes.length}
+        itineraryCount={itineraryDays.length}
       />
 
       {/* Main Workspace Area */}
@@ -459,7 +518,7 @@ export default function App() {
             {/* 3. Transportation Sectors Costing */}
             <TransportationSection
               transportItems={transportItems}
-              onUpdateTransportItems={setTransportItems}
+              onUpdateTransportItems={handleUpdateTransportItems}
               tripInfo={tripInfo}
               currency={transportCurrency}
               onCurrencyChange={handleTransportCurrencyChange}
@@ -501,8 +560,29 @@ export default function App() {
               onNotesChange={setNotes}
               marginPerPax={marginPerPax}
               onMarginChange={setMarginPerPax}
+              onNavigateToItinerary={() => setActiveTab('itinerary')}
             />
           </>
+        )}
+
+        {activeTab === 'itinerary' && (
+          /* 7. Step 2: Tour Itinerary Planning Tab */
+          <ItineraryPlanningTab
+            itineraryDays={itineraryDays}
+            onUpdateItineraryDays={setItineraryDays}
+            transportItems={transportItems}
+            availableTransportRoutes={availableTransportRoutes}
+            availableHotels={availableHotels}
+            availableItineraryTemplates={itineraryTemplates}
+            onCreateTemplate={handleCreateTemplate}
+            onUpdateTemplate={handleUpdateTemplate}
+            onDeleteTemplate={handleDeleteTemplate}
+            tripInfo={tripInfo}
+            onNavigateToCosting={() => setActiveTab('quotation')}
+            onPreview={() => setIsPreviewOpen(true)}
+            onPrint={handlePrint}
+            onSyncWithTransport={handleSyncItineraryWithTransport}
+          />
         )}
 
         {activeTab === 'rates' && (
@@ -528,6 +608,10 @@ export default function App() {
             onDeleteTransportRoute={handleDeleteTransportRouteMaster}
             onResetToBaseRate={handleResetTransportRouteToBaseRate}
             onRefresh={loadAllData}
+            availableItineraryTemplates={itineraryTemplates}
+            onCreateTemplate={handleCreateTemplate}
+            onUpdateTemplate={handleUpdateTemplate}
+            onDeleteTemplate={handleDeleteTemplate}
           />
         )}
       </main>
@@ -557,6 +641,7 @@ export default function App() {
         additionalCurrency={additionalCurrency}
         guideItems={guideItems}
         guideCurrency={guideCurrency}
+        itineraryDays={itineraryDays}
         notes={notes}
         marginPerPax={marginPerPax}
       />
@@ -573,6 +658,7 @@ export default function App() {
         additionalCurrency={additionalCurrency}
         guideItems={guideItems}
         guideCurrency={guideCurrency}
+        itineraryDays={itineraryDays}
         notes={notes}
         marginPerPax={marginPerPax}
       />
