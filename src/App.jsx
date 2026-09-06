@@ -13,6 +13,7 @@ import QuotationsHistoryTab from './components/QuotationsHistoryTab';
 import FinalizeQuoteModal from './components/FinalizeQuoteModal';
 import SupabaseConfigModal from './components/SupabaseConfigModal';
 import QuotationPreviewModal from './components/QuotationPreviewModal';
+import EmailQuoteModal from './components/EmailQuoteModal';
 import PrintQuotation from './components/PrintQuotation';
 import { 
   fetchHotelsService, 
@@ -33,6 +34,7 @@ import {
   saveQuotationService,
   updateQuotationStatusService,
   deleteQuotationService,
+  logQuotationEmailService,
   isSupabaseConfigured 
 } from './lib/supabase';
 import { 
@@ -120,7 +122,9 @@ export default function App() {
   const [isSupabaseConfigOpen, setIsSupabaseConfigOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [previewQuoteData, setPreviewQuoteData] = useState(null);
+  const [emailQuoteData, setEmailQuoteData] = useState(null);
 
   // Quotation Inclusions & Terms
   const [notes, setNotes] = useState(
@@ -652,6 +656,26 @@ export default function App() {
     }
   };
 
+  // Email Dispatch Modal Handlers
+  const handleOpenEmailModal = (quoteToEmail = null) => {
+    setEmailQuoteData(quoteToEmail);
+    setIsEmailModalOpen(true);
+  };
+
+  const handleEmailSent = async (details) => {
+    try {
+      await logQuotationEmailService({
+        quoteNumber: details.quoteNumber,
+        recipientEmail: details.recipientEmail,
+        subject: details.subject || `Quotation - ${details.quoteNumber}`,
+        sesMessageId: details.messageId,
+        sentBy: tripInfo.preparedBy || 'Subhash Rajbhandari'
+      });
+    } catch (err) {
+      console.warn('Failed to log email to Supabase:', err);
+    }
+  };
+
   const materializedQuotationsCount = quotationsList.filter(q => q.status === 'materialized').length;
 
   return (
@@ -667,6 +691,7 @@ export default function App() {
           setIsPreviewOpen(true);
         }}
         onPrint={handlePrint}
+        onEmailQuote={() => handleOpenEmailModal(null)}
         onFinalizeQuote={() => setIsFinalizeModalOpen(true)}
         onNewQuotation={() => {
           setTripInfo(prev => ({
@@ -756,6 +781,7 @@ export default function App() {
               onMarginChange={setMarginPerPax}
               onNavigateToItinerary={() => setActiveTab('itinerary')}
               onFinalizeQuote={() => setIsFinalizeModalOpen(true)}
+              onEmailQuote={() => handleOpenEmailModal(null)}
             />
           </>
         )}
@@ -780,6 +806,7 @@ export default function App() {
               setIsPreviewOpen(true);
             }}
             onPrint={handlePrint}
+            onEmailQuote={() => handleOpenEmailModal(null)}
             onSyncWithTransport={handleSyncItineraryWithTransport}
             onFinalize={() => setIsFinalizeModalOpen(true)}
           />
@@ -801,6 +828,8 @@ export default function App() {
             onPreview={handlePreviewPastQuote}
             onPrintQuote={handlePrint}
             onPrint={handlePrint}
+            onEmailQuote={handleOpenEmailModal}
+            onEmail={handleOpenEmailModal}
             onRefresh={loadAllData}
             onNavigateToNewQuote={() => {
               setTripInfo(prev => ({
@@ -897,6 +926,30 @@ export default function App() {
         itineraryDays={itineraryDays}
         notes={notes}
         marginPerPax={marginPerPax}
+      />
+
+      {/* Email Quotation Modal (AWS SES) */}
+      <EmailQuoteModal
+        isOpen={isEmailModalOpen}
+        onClose={() => {
+          setIsEmailModalOpen(false);
+          setEmailQuoteData(null);
+        }}
+        quoteData={emailQuoteData}
+        tripInfo={tripInfo}
+        hotelRows={hotelRows}
+        availableHotels={availableHotels}
+        hotelCurrency={hotelCurrency}
+        transportItems={transportItems}
+        transportCurrency={transportCurrency}
+        additionalItems={additionalItems}
+        additionalCurrency={additionalCurrency}
+        guideItems={guideItems}
+        guideCurrency={guideCurrency}
+        itineraryDays={itineraryDays}
+        notes={notes}
+        marginPerPax={marginPerPax}
+        onEmailSent={handleEmailSent}
       />
 
       {/* Dedicated High-Resolution Print / PDF Document Root */}

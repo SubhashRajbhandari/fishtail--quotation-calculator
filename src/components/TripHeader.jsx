@@ -2,6 +2,7 @@ import React from 'react';
 import { 
   FileText, 
   User, 
+  Mail,
   Calendar, 
   DollarSign, 
   Users, 
@@ -86,6 +87,22 @@ export default function TripHeader({ tripInfo, onChange, onFinalize }) {
                 style={{ paddingLeft: '2.2rem' }}
               />
               <User size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+            </div>
+          </div>
+
+          {/* Target Client / Business Email */}
+          <div className="form-group">
+            <label className="form-label">Client / Business Email</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="email"
+                className="form-input"
+                value={tripInfo.clientEmail || ''}
+                onChange={(e) => onChange('clientEmail', e.target.value)}
+                placeholder="client@gmail.com or info@partner.com"
+                style={{ paddingLeft: '2.2rem' }}
+              />
+              <Mail size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#0d9488' }} />
             </div>
           </div>
 

@@ -121,14 +121,34 @@ ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS additional_items JSONB DE
 ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS guide_items JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS itinerary_days JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS margin_per_pax NUMERIC(12, 2) DEFAULT 2500.00;
-ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS net_package_cost_npr NUMERIC(12, 2) DEFAULT 0.00;
 ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS final_adult_rate_npr NUMERIC(12, 2) DEFAULT 0.00;
 ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS group_grand_total_npr NUMERIC(12, 2) DEFAULT 0.00;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS client_email TEXT DEFAULT '';
 ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS materialized_at TIMESTAMPTZ;
+
+-- 3B. Quotation Emails Dispatch Log Table (Tracks AWS SES outbound history)
+CREATE TABLE IF NOT EXISTS public.quotation_emails (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quotation_id UUID REFERENCES public.quotations(id) ON DELETE SET NULL,
+    quote_number TEXT NOT NULL,
+    recipient_email TEXT NOT NULL,
+    cc_emails TEXT DEFAULT '',
+    subject TEXT NOT NULL,
+    ses_message_id TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'sent', -- 'sent', 'failed', 'delivered'
+    sent_by TEXT DEFAULT 'Subhash Rajbhandari',
+    sent_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quotation_emails_quote_number ON public.quotation_emails(quote_number);
+CREATE INDEX IF NOT EXISTS idx_quotation_emails_recipient ON public.quotation_emails(recipient_email);
+CREATE INDEX IF NOT EXISTS idx_quotation_emails_sent_at ON public.quotation_emails(sent_at DESC);
 
 -- Indexes for fast searching and status filtering
 CREATE INDEX IF NOT EXISTS idx_quotations_quote_number ON public.quotations(quote_number);
 CREATE INDEX IF NOT EXISTS idx_quotations_client_name ON public.quotations(client_name);
+CREATE INDEX IF NOT EXISTS idx_quotations_client_email ON public.quotations(client_email);
 CREATE INDEX IF NOT EXISTS idx_quotations_prepared_by ON public.quotations(prepared_by);
 CREATE INDEX IF NOT EXISTS idx_quotations_status ON public.quotations(status);
 CREATE INDEX IF NOT EXISTS idx_quotations_created_at ON public.quotations(created_at DESC);
@@ -143,6 +163,15 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 4. Row Level Security (RLS) Policies
 ALTER TABLE public.hotels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quotations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quotation_emails ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anon full access on quotation_emails" ON public.quotation_emails;
+CREATE POLICY "Allow anon full access on quotation_emails" 
+ON public.quotation_emails 
+FOR ALL 
+TO anon, authenticated 
+USING (true) 
+WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow anon full access on hotels" ON public.hotels;
 CREATE POLICY "Allow anon full access on hotels" 

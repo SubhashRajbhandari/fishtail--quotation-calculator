@@ -697,6 +697,7 @@ export function sanitizeQuotationPayload(quoteData) {
   return {
     quote_number: String(quoteData.quote_number || `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`),
     client_name: String(quoteData.client_name || 'Direct Guest / Partner Agency'),
+    client_email: String(quoteData.client_email || ''),
     trip_title: String(quoteData.trip_title || 'Nepal Tour Package'),
     prepared_by: String(quoteData.prepared_by || 'Subhash Rajbhandari'),
     quote_date: quoteData.quote_date || new Date().toISOString().split('T')[0],
@@ -883,6 +884,55 @@ export async function seedSupabaseQuotations() {
   if (error) throw error;
   return data;
 }
+
+// 5. Quotation Outbound Email Dispatch Logging Service
+const LOCAL_STORAGE_EMAILS_LOG = 'fishtail_quotation_emails_log';
+
+export async function logQuotationEmailService({
+  quotationId = null,
+  quoteNumber,
+  recipientEmail,
+  ccEmails = '',
+  subject,
+  sesMessageId = '',
+  status = 'sent',
+  sentBy = 'Subhash Rajbhandari'
+}) {
+  const client = getSupabaseClient();
+  const payload = {
+    quotation_id: quotationId && !String(quotationId).startsWith('q-sample-') && !String(quotationId).startsWith('q-loc-') ? quotationId : null,
+    quote_number: quoteNumber,
+    recipient_email: recipientEmail,
+    cc_emails: ccEmails,
+    subject: subject,
+    ses_message_id: sesMessageId,
+    status: status,
+    sent_by: sentBy,
+    sent_at: new Date().toISOString()
+  };
+
+  if (client) {
+    try {
+      const { data, error } = await client.from('quotation_emails').insert([payload]).select().single();
+      if (!error && data) {
+        return { data, isLive: true };
+      }
+    } catch (err) {
+      console.warn('Supabase quotation email log failed, logging locally:', err);
+    }
+  }
+
+  // Local backup
+  try {
+    const existing = JSON.parse(localStorage.getItem(LOCAL_STORAGE_EMAILS_LOG) || '[]');
+    const logged = { id: 'email-log-' + Date.now(), ...payload };
+    localStorage.setItem(LOCAL_STORAGE_EMAILS_LOG, JSON.stringify([logged, ...existing]));
+    return { data: logged, isLive: false };
+  } catch (_) {
+    return { data: payload, isLive: false };
+  }
+}
+
 
 
 

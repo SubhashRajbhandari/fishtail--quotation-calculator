@@ -29,7 +29,8 @@ import {
   Award,
   Check,
   UserCheck,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -47,6 +48,8 @@ export default function QuotationsHistoryTab({
   onPreview,
   onPrintQuote,
   onPrint,
+  onEmailQuote,
+  onEmail,
   onRefresh,
   onNavigateToNewQuote,
   onNewQuotation
@@ -56,6 +59,7 @@ export default function QuotationsHistoryTab({
   const handleClone = onCloneQuote || onClone;
   const handlePreview = onPreviewQuote || onPreview;
   const handlePrint = onPrintQuote || onPrint;
+  const handleEmail = onEmailQuote || onEmail;
   const handleNewQuote = onNavigateToNewQuote || onNewQuotation;
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -758,6 +762,27 @@ export default function QuotationsHistoryTab({
                         <Printer size={13} />
                         <span>Print</span>
                       </button>
+
+                      {/* Email Quote via AWS SES */}
+                      {handleEmail && (
+                        <button
+                          type="button"
+                          onClick={() => handleEmail(quote)}
+                          className="btn btn-sm"
+                          style={{ 
+                            fontSize: '0.75rem', 
+                            padding: '0.3rem 0.6rem',
+                            background: 'linear-gradient(135deg, #0d9488 0%, #00bba4 100%)',
+                            color: '#ffffff',
+                            border: '1px solid #00bba4',
+                            fontWeight: 700
+                          }}
+                          title="Email this proposal to client via AWS SES"
+                        >
+                          <Mail size={13} />
+                          <span>Email</span>
+                        </button>
+                      )}
 
                       {/* Load into Workspace */}
                       <button

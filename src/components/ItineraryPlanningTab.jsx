@@ -27,7 +27,8 @@ import {
   Save,
   X,
   Edit3,
-  BookmarkCheck
+  BookmarkCheck,
+  Mail
 } from 'lucide-react';
 import { MASTER_TRANSPORT_ROUTES, MASTER_ITINERARY_TEMPLATES } from '../lib/mockData';
 
@@ -46,6 +47,7 @@ export default function ItineraryPlanningTab({
   onNavigateToCosting,
   onPreview,
   onPrint,
+  onEmailQuote,
   onSyncWithTransport,
   onFinalize
 }) {
@@ -404,6 +406,24 @@ export default function ItineraryPlanningTab({
               <Printer size={16} />
               <span>Print / Save PDF</span>
             </button>
+
+            {onEmailQuote && (
+              <button
+                type="button"
+                onClick={onEmailQuote}
+                className="btn"
+                style={{
+                  background: 'linear-gradient(135deg, #0d9488 0%, #00bba4 100%)',
+                  color: '#ffffff',
+                  border: '1px solid #00bba4',
+                  fontWeight: 700
+                }}
+                title="Email executive quotation & itinerary to client"
+              >
+                <Mail size={16} />
+                <span>Email Quote</span>
+              </button>
+            )}
           </div>
         </div>
 

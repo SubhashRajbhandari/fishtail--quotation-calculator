@@ -14,7 +14,8 @@ import {
   MapPin,
   Calendar,
   BookmarkCheck,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 
 export default function Navbar({
@@ -24,6 +25,7 @@ export default function Navbar({
   onOpenSupabaseConfig,
   onPreview,
   onPrint,
+  onEmailQuote,
   onFinalizeQuote,
   onNewQuotation,
   isRefreshing,
@@ -186,6 +188,25 @@ export default function Navbar({
                 <Printer size={14} />
                 <span>Print</span>
               </button>
+
+              {onEmailQuote && (
+                <button 
+                  type="button" 
+                  onClick={onEmailQuote} 
+                  className="btn btn-sm"
+                  title="Email executive quotation & itinerary to client via AWS SES"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #0d9488 0%, #00bba4 100%)',
+                    color: '#ffffff',
+                    border: '1px solid #00bba4',
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Mail size={14} />
+                  <span>Email</span>
+                </button>
+              )}
             </div>
           )}
 

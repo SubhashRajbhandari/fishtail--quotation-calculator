@@ -9,12 +9,13 @@ import {
   TrendingUp, 
   Baby, 
   DollarSign, 
-  Sparkles,
-  FileCheck2,
-  ArrowRight,
-  MapPin,
-  Calendar,
-  BookmarkCheck
+  Sparkles, 
+  FileCheck2, 
+  ArrowRight, 
+  MapPin, 
+  Calendar, 
+  BookmarkCheck,
+  Mail
 } from 'lucide-react';
 
 export default function PackageGrandTotalCard({
@@ -33,7 +34,8 @@ export default function PackageGrandTotalCard({
   marginPerPax,
   onMarginChange,
   onNavigateToItinerary,
-  onFinalizeQuote
+  onFinalizeQuote,
+  onEmailQuote
 }) {
   const getCurrencySymbol = (curr) => {
     switch (curr) {
@@ -361,6 +363,30 @@ export default function PackageGrandTotalCard({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {onEmailQuote && (
+                <button
+                  type="button"
+                  onClick={onEmailQuote}
+                  className="btn"
+                  style={{ 
+                    padding: '0.75rem 1.25rem', 
+                    fontSize: '0.95rem', 
+                    fontWeight: 800, 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    background: 'linear-gradient(135deg, #0d9488 0%, #00bba4 100%)',
+                    color: '#ffffff',
+                    border: '1px solid #00bba4',
+                    boxShadow: '0 4px 12px rgba(0, 187, 164, 0.35)'
+                  }}
+                  title="Email executive proposal & itinerary to client"
+                >
+                  <Mail size={18} />
+                  <span>Email Quotation</span>
+                </button>
+              )}
+
               {onFinalizeQuote && (
                 <button
                   type="button"
