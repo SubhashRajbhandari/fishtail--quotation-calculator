@@ -6,6 +6,7 @@ export default function QuotationPreviewModal({
   isOpen,
   onClose,
   onPrint,
+  quoteData = null,
   tripInfo,
   hotelRows,
   availableHotels,
@@ -21,6 +22,29 @@ export default function QuotationPreviewModal({
   marginPerPax
 }) {
   if (!isOpen) return null;
+
+  const effectiveTripInfo = quoteData ? {
+    tripTitle: quoteData.trip_title || 'Nepal Tour Package',
+    clientName: quoteData.client_name || 'Valued Client',
+    preparedBy: quoteData.prepared_by || tripInfo?.preparedBy || 'Subhash Rajbhandari',
+    quoteNumber: quoteData.quote_number || 'FT-2026-QUOTE',
+    quoteDate: quoteData.quote_date || new Date().toISOString().split('T')[0],
+    paxAdults: quoteData.pax_adults || 2,
+    singleRoomsCount: quoteData.single_rooms_count || 0,
+    usdToNprRate: Number(quoteData.usd_to_npr_rate) || 135.5
+  } : tripInfo;
+
+  const effectiveHotelRows = quoteData?.hotel_rows || hotelRows;
+  const effectiveTransportItems = quoteData?.transport_items || transportItems;
+  const effectiveAdditionalItems = quoteData?.additional_items || additionalItems;
+  const effectiveGuideItems = quoteData?.guide_items || guideItems;
+  const effectiveItineraryDays = quoteData?.itinerary_days || itineraryDays;
+  const effectiveHotelCurrency = quoteData?.hotel_currency || hotelCurrency;
+  const effectiveTransportCurrency = quoteData?.transport_currency || transportCurrency;
+  const effectiveAdditionalCurrency = quoteData?.additional_currency || additionalCurrency;
+  const effectiveGuideCurrency = quoteData?.guide_currency || guideCurrency;
+  const effectiveNotes = quoteData?.notes !== undefined ? quoteData.notes : notes;
+  const effectiveMarginPerPax = quoteData?.margin_per_pax !== undefined ? quoteData.margin_per_pax : marginPerPax;
 
   return (
     <div className="modal-backdrop no-print" onClick={onClose}>
@@ -40,7 +64,7 @@ export default function QuotationPreviewModal({
                 Quotation Document Preview
               </div>
               <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                Ref: {tripInfo?.quoteNumber || 'FT-2026-QUOTE'} • Ready for print or PDF download
+                Ref: {effectiveTripInfo?.quoteNumber || 'FT-2026-QUOTE'} • Prepared by: {effectiveTripInfo?.preparedBy || 'Subhash Rajbhandari'}
               </div>
             </div>
           </div>
@@ -71,11 +95,9 @@ export default function QuotationPreviewModal({
           className="modal-body quotation-preview-body" 
           style={{ 
             padding: '1.5rem', 
-            background: '#64748b', 
+            background: '#475569', 
             overflowY: 'auto', 
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'center'
+            flex: 1
           }}
         >
           <div 
@@ -83,34 +105,38 @@ export default function QuotationPreviewModal({
             style={{ 
               background: '#ffffff', 
               width: '100%', 
-              maxWidth: '800px', 
-              padding: '2rem 2.5rem', 
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
-              borderRadius: '4px'
+              maxWidth: '820px', 
+              margin: '0 auto 2.5rem auto',
+              minHeight: '100%',
+              height: 'fit-content',
+              padding: '2.5rem 3rem', 
+              boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 10px 15px -5px rgba(0, 0, 0, 0.2)',
+              borderRadius: '6px',
+              boxSizing: 'border-box'
             }}
           >
             <PrintQuotation
-              tripInfo={tripInfo}
-              hotelRows={hotelRows}
+              tripInfo={effectiveTripInfo}
+              hotelRows={effectiveHotelRows}
               availableHotels={availableHotels}
-              hotelCurrency={hotelCurrency}
-              transportItems={transportItems}
-              transportCurrency={transportCurrency}
-              additionalItems={additionalItems}
-              additionalCurrency={additionalCurrency}
-              guideItems={guideItems}
-              guideCurrency={guideCurrency}
-              itineraryDays={itineraryDays}
-              notes={notes}
-              marginPerPax={marginPerPax}
+              hotelCurrency={effectiveHotelCurrency}
+              transportItems={effectiveTransportItems}
+              transportCurrency={effectiveTransportCurrency}
+              additionalItems={effectiveAdditionalItems}
+              additionalCurrency={effectiveAdditionalCurrency}
+              guideItems={effectiveGuideItems}
+              guideCurrency={effectiveGuideCurrency}
+              itineraryDays={effectiveItineraryDays}
+              notes={effectiveNotes}
+              marginPerPax={effectiveMarginPerPax}
             />
           </div>
         </div>
 
         {/* Modal Footer */}
         <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', padding: '0.75rem 1.5rem', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-            💡 Tip: In the browser print dialog, set Destination to <strong>"Save as PDF"</strong> or your printer.
+          <span style={{ fontSize: '0.78rem', color: '#475569' }}>
+            🎨 <strong>Color Print Tip:</strong> In your browser print dialog, ensure <strong>"Background graphics"</strong> is checked to print full colors.
           </span>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button type="button" onClick={onClose} className="btn btn-secondary btn-sm">

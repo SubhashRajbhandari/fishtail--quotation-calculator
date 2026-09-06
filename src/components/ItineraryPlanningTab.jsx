@@ -26,7 +26,8 @@ import {
   Layers,
   Save,
   X,
-  Edit3
+  Edit3,
+  BookmarkCheck
 } from 'lucide-react';
 import { MASTER_TRANSPORT_ROUTES, MASTER_ITINERARY_TEMPLATES } from '../lib/mockData';
 
@@ -45,7 +46,8 @@ export default function ItineraryPlanningTab({
   onNavigateToCosting,
   onPreview,
   onPrint,
-  onSyncWithTransport
+  onSyncWithTransport,
+  onFinalize
 }) {
   const [saveModalDay, setSaveModalDay] = useState(null);
   const [newTemplateName, setNewTemplateName] = useState('');
@@ -371,6 +373,19 @@ export default function ItineraryPlanningTab({
               <RefreshCw size={15} />
               <span>Sync with Transport ({transportItems.length})</span>
             </button>
+
+            {onFinalize && (
+              <button
+                type="button"
+                onClick={onFinalize}
+                className="btn btn-primary"
+                style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', border: '1px solid #10b981' }}
+                title="Finalize quote and save to past quotation records with status tag"
+              >
+                <BookmarkCheck size={16} />
+                <span>Finalize Quote</span>
+              </button>
+            )}
 
             <button
               type="button"

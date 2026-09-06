@@ -6,10 +6,11 @@ import {
   DollarSign, 
   Users, 
   MapPin,
-  Sparkles
+  Sparkles,
+  UserCheck
 } from 'lucide-react';
 
-export default function TripHeader({ tripInfo, onChange }) {
+export default function TripHeader({ tripInfo, onChange, onFinalize }) {
   return (
     <div className="card">
       <div className="card-header">
@@ -23,20 +24,34 @@ export default function TripHeader({ tripInfo, onChange }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-            REF:
-          </span>
-          <span style={{ 
-            fontFamily: 'JetBrains Mono, monospace', 
-            fontWeight: 700, 
-            background: 'var(--bg-muted)', 
-            padding: '0.2rem 0.5rem', 
-            borderRadius: '4px',
-            fontSize: '0.85rem'
-          }}>
-            {tripInfo.quoteNumber}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+              REF:
+            </span>
+            <span style={{ 
+              fontFamily: 'JetBrains Mono, monospace', 
+              fontWeight: 700, 
+              background: 'var(--bg-muted)', 
+              padding: '0.2rem 0.5rem', 
+              borderRadius: '4px',
+              fontSize: '0.85rem'
+            }}>
+              {tripInfo.quoteNumber}
+            </span>
+          </div>
+
+          {onFinalize && (
+            <button
+              type="button"
+              onClick={onFinalize}
+              className="btn btn-sm"
+              style={{ background: '#059669', color: '#ffffff', fontWeight: 700, padding: '0.25rem 0.75rem', fontSize: '0.78rem' }}
+              title="Save & Finalize this Quotation"
+            >
+              Finalize Quote
+            </button>
+          )}
         </div>
       </div>
 
@@ -58,7 +73,7 @@ export default function TripHeader({ tripInfo, onChange }) {
             </div>
           </div>
 
-          {/* Client / Agent Name */}
+          {/* Client / Agency Name */}
           <div className="form-group">
             <label className="form-label">Client / Agency Name</label>
             <div style={{ position: 'relative' }}>
@@ -67,10 +82,29 @@ export default function TripHeader({ tripInfo, onChange }) {
                 className="form-input"
                 value={tripInfo.clientName}
                 onChange={(e) => onChange('clientName', e.target.value)}
-                placeholder="Client Name or Agent"
+                placeholder="Client Name or Travel Agency"
                 style={{ paddingLeft: '2.2rem' }}
               />
               <User size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+            </div>
+          </div>
+
+          {/* Prepared By (Quotation & Itinerary Creator) */}
+          <div className="form-group">
+            <label className="form-label">Quotation & Itinerary Prepared By</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                className="form-input"
+                value={tripInfo.preparedBy || ''}
+                onChange={(e) => {
+                  onChange('preparedBy', e.target.value);
+                  try { localStorage.setItem('fishtail_agent_name', e.target.value); } catch (_) {}
+                }}
+                placeholder="Tour Consultant Name (e.g. Subhash)"
+                style={{ paddingLeft: '2.2rem' }}
+              />
+              <UserCheck size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#059669' }} />
             </div>
           </div>
 

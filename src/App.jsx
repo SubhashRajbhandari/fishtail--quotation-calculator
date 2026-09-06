@@ -9,6 +9,8 @@ import PackageGrandTotalCard from './components/PackageGrandTotalCard';
 import ItineraryPlanningTab from './components/ItineraryPlanningTab';
 import HotelRatesTab from './components/HotelRatesTab';
 import TransportationRatesTab from './components/TransportationRatesTab';
+import QuotationsHistoryTab from './components/QuotationsHistoryTab';
+import FinalizeQuoteModal from './components/FinalizeQuoteModal';
 import SupabaseConfigModal from './components/SupabaseConfigModal';
 import QuotationPreviewModal from './components/QuotationPreviewModal';
 import PrintQuotation from './components/PrintQuotation';
@@ -27,6 +29,10 @@ import {
   createItineraryTemplateService,
   updateItineraryTemplateService,
   deleteItineraryTemplateService,
+  fetchQuotationsService,
+  saveQuotationService,
+  updateQuotationStatusService,
+  deleteQuotationService,
   isSupabaseConfigured 
 } from './lib/supabase';
 import { 
@@ -39,18 +45,20 @@ import {
   MASTER_ADDITIONAL_ACTIVITIES,
   MASTER_GUIDE_OPTIONS,
   MASTER_ITINERARY_TEMPLATES,
+  SAMPLE_PAST_QUOTATIONS,
   generateItineraryFromTransport,
   syncItineraryWithTransportList
 } from './lib/mockData';
 
 export default function App() {
-  // Navigation Tab ('quotation' | 'rates' | 'transportRates')
+  // Navigation Tab ('quotation' | 'itinerary' | 'history' | 'rates' | 'transportRates')
   const [activeTab, setActiveTab] = useState('quotation');
 
   // Trip & Quotation Info
   const [tripInfo, setTripInfo] = useState({
     tripTitle: 'Kathmandu - Pokhara - Chitwan - Chandragiri 7D/6N Tour',
     clientName: 'Acme Travels / Direct Guest',
+    preparedBy: localStorage.getItem('fishtail_agent_name') || 'Subhash Rajbhandari',
     quoteNumber: `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
     quoteDate: new Date().toISOString().split('T')[0],
     paxAdults: 2,
@@ -88,6 +96,9 @@ export default function App() {
   // Itinerary Templates Catalog (Multi-Variant Presets from Database)
   const [itineraryTemplates, setItineraryTemplates] = useState(MASTER_ITINERARY_TEMPLATES);
 
+  // Past Quotations Records List
+  const [quotationsList, setQuotationsList] = useState(SAMPLE_PAST_QUOTATIONS);
+
   // Transportation items update handler with automatic itinerary synchronization
   const handleUpdateTransportItems = (newItems) => {
     setTransportItems(newItems);
@@ -108,6 +119,8 @@ export default function App() {
   // Modals
   const [isSupabaseConfigOpen, setIsSupabaseConfigOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+  const [previewQuoteData, setPreviewQuoteData] = useState(null);
 
   // Quotation Inclusions & Terms
   const [notes, setNotes] = useState(
@@ -166,10 +179,28 @@ export default function App() {
     }
   };
 
+  // Load Quotations from Supabase / Local Storage
+  const loadQuotations = async () => {
+    try {
+      const { data, isLive } = await fetchQuotationsService();
+      if (data && data.length > 0) {
+        setQuotationsList(data);
+        if (isLive) setIsLiveSupabase(true);
+      }
+    } catch (err) {
+      console.error('Failed to load quotations:', err);
+    }
+  };
+
   const loadAllData = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([loadHotels(), loadTransportRoutes(), loadItineraryTemplates()]);
+      await Promise.all([
+        loadHotels(), 
+        loadTransportRoutes(), 
+        loadItineraryTemplates(),
+        loadQuotations()
+      ]);
     } finally {
       setIsRefreshing(false);
     }
@@ -469,10 +500,159 @@ export default function App() {
   const additionalTotal = additionalItems.reduce((sum, it) => sum + (Number(it.unit_price_inr) || 0) * (Number(it.qty) || 1), 0);
   const guideTotal = guideItems.reduce((sum, it) => sum + (Number(it.rate_per_day_inr) || 0) * (Number(it.days) || 1), 0);
 
-  // Trigger Native Browser Print Dialog
-  const handlePrint = () => {
-    window.print();
+  const paxCount = Math.max(1, tripInfo.paxAdults || 1);
+  const usdRate = Number(tripInfo.usdToNprRate) || 135.5;
+
+  const getMultiplierToNpr = (curr) => {
+    if (curr === 'INR') return 1.6;
+    if (curr === 'USD') return usdRate;
+    return 1.0;
   };
+
+  const hotelNprMultiplier = getMultiplierToNpr(hotelCurrency);
+  const transportNprMultiplier = getMultiplierToNpr(transportCurrency);
+  const additionalNprMultiplier = getMultiplierToNpr(additionalCurrency);
+  const guideNprMultiplier = getMultiplierToNpr(guideCurrency);
+
+  const hotelPerPax = Math.round(hotelTotalHalfTwin);
+  const transportPerPax = Math.round(transportTotal / paxCount);
+  const additionalPerPax = Math.round(additionalTotal / paxCount);
+  const guidePerPax = Math.round(guideTotal / paxCount);
+  const margin = Number(marginPerPax) || 0;
+
+  const hotelPerPaxNpr = Math.round(hotelPerPax * hotelNprMultiplier);
+  const transportPerPaxNpr = Math.round(transportPerPax * transportNprMultiplier);
+  const additionalPerPaxNpr = Math.round(additionalPerPax * additionalNprMultiplier);
+  const guidePerPaxNpr = Math.round(guidePerPax * guideNprMultiplier);
+
+  const netPackageCostPerAdultNpr = hotelPerPaxNpr + transportPerPaxNpr + additionalPerPaxNpr + guidePerPaxNpr;
+  const finalAdultRateNpr = netPackageCostPerAdultNpr + margin;
+  const finalTotalAdultGroupNpr = finalAdultRateNpr * paxCount;
+  const singleSupplementNpr = Math.round((Number(hotelTotalSingle) || 0) * hotelNprMultiplier);
+  const groupGrandTotalNpr = finalTotalAdultGroupNpr + singleSupplementNpr;
+
+  // Finalize Quotation Handler (Save to Supabase / Local Storage)
+  const handleSaveQuotation = async (finalizeData) => {
+    const totalNights = hotelRows.reduce((sum, r) => sum + (Number(r.nights) || 0), 0);
+    const quotePayload = {
+      quote_number: tripInfo.quoteNumber || `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      client_name: tripInfo.clientName || 'Direct Guest',
+      prepared_by: finalizeData?.prepared_by || tripInfo.preparedBy || 'Subhash Rajbhandari',
+      trip_title: tripInfo.tripTitle || 'Custom Nepal Tour Package',
+      quote_date: tripInfo.quoteDate || new Date().toISOString().split('T')[0],
+      pax_adults: tripInfo.paxAdults || 2,
+      single_rooms_count: tripInfo.singleRoomsCount || 0,
+      total_nights: totalNights || 1,
+      hotel_currency: hotelCurrency,
+      transport_currency: transportCurrency,
+      additional_currency: additionalCurrency,
+      guide_currency: guideCurrency,
+      usd_to_npr_rate: Number(tripInfo.usdToNprRate) || 135.5,
+      hotel_rows: hotelRows,
+      transport_items: transportItems,
+      additional_items: additionalItems,
+      guide_items: guideItems,
+      itinerary_days: itineraryDays,
+      margin_per_pax: marginPerPax,
+      final_adult_rate_npr: finalAdultRateNpr,
+      group_grand_total_npr: groupGrandTotalNpr,
+      status: finalizeData?.status || 'materialized',
+      materialized_at: finalizeData?.materialized_at || (finalizeData?.status === 'materialized' ? new Date().toISOString() : null),
+      notes: finalizeData?.remarks ? `${notes}\n\n[Agent Remarks]: ${finalizeData.remarks}` : notes
+    };
+
+    await saveQuotationService(quotePayload);
+    await loadQuotations();
+
+    // Prepare next quote reference for fresh quotation creation
+    setTripInfo(prev => ({
+      ...prev,
+      quoteNumber: `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+    }));
+
+    // Switch to history tab to show the recorded quotation
+    setActiveTab('history');
+  };
+
+  // 1-Click Status Update Handler from Past Quotations Dashboard
+  const handleUpdateQuoteStatus = async (id, newStatus) => {
+    await updateQuotationStatusService(id, newStatus);
+    await loadQuotations();
+  };
+
+  // Delete Quotation Record
+  const handleDeleteQuote = async (id) => {
+    await deleteQuotationService(id);
+    await loadQuotations();
+  };
+
+  // Load Past Quotation back into active workspace
+  const handleLoadQuoteIntoWorkspace = (quote) => {
+    if (!quote) return;
+
+    setTripInfo({
+      tripTitle: quote.trip_title || 'Custom Nepal Tour Package',
+      clientName: quote.client_name || 'Direct Guest',
+      preparedBy: quote.prepared_by || tripInfo.preparedBy || 'Subhash Rajbhandari',
+      quoteNumber: quote.quote_number || `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      quoteDate: quote.quote_date || new Date().toISOString().split('T')[0],
+      paxAdults: quote.pax_adults || 2,
+      singleRoomsCount: quote.single_rooms_count || 0,
+      usdToNprRate: Number(quote.usd_to_npr_rate) || 135.5
+    });
+
+    if (quote.hotel_rows && Array.isArray(quote.hotel_rows)) setHotelRows(quote.hotel_rows);
+    if (quote.transport_items && Array.isArray(quote.transport_items)) setTransportItems(quote.transport_items);
+    if (quote.additional_items && Array.isArray(quote.additional_items)) setAdditionalItems(quote.additional_items);
+    if (quote.guide_items && Array.isArray(quote.guide_items)) setGuideItems(quote.guide_items);
+    if (quote.itinerary_days && Array.isArray(quote.itinerary_days)) setItineraryDays(quote.itinerary_days);
+
+    if (quote.hotel_currency) setHotelCurrency(quote.hotel_currency);
+    if (quote.transport_currency) setTransportCurrency(quote.transport_currency);
+    if (quote.additional_currency) setAdditionalCurrency(quote.additional_currency);
+    if (quote.guide_currency) setGuideCurrency(quote.guide_currency);
+
+    if (quote.margin_per_pax !== undefined) setMarginPerPax(quote.margin_per_pax);
+    if (quote.notes) setNotes(quote.notes);
+
+    setActiveTab('quotation');
+  };
+
+  // Clone Past Quotation as a new draft
+  const handleCloneQuote = async (quote) => {
+    if (!quote) return;
+    const cloned = {
+      ...quote,
+      id: undefined,
+      quote_number: `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      status: 'draft',
+      materialized_at: null,
+      quote_date: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString()
+    };
+    await saveQuotationService(cloned);
+    await loadQuotations();
+  };
+
+  // Preview Past Quotation
+  const handlePreviewPastQuote = (quote) => {
+    setPreviewQuoteData(quote);
+    setIsPreviewOpen(true);
+  };
+
+  // Trigger Native Browser Print Dialog (supports printing active workspace or explicit past quote)
+  const handlePrint = (quoteToPrint = null) => {
+    if (quoteToPrint && (quoteToPrint.quote_number || quoteToPrint.id)) {
+      setPreviewQuoteData(quoteToPrint);
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    } else {
+      window.print();
+    }
+  };
+
+  const materializedQuotationsCount = quotationsList.filter(q => q.status === 'materialized').length;
 
   return (
     <div className="app-container">
@@ -482,13 +662,26 @@ export default function App() {
         onTabChange={setActiveTab}
         isLiveSupabase={isLiveSupabase}
         onOpenSupabaseConfig={() => setIsSupabaseConfigOpen(true)}
-        onPreview={() => setIsPreviewOpen(true)}
+        onPreview={() => {
+          setPreviewQuoteData(null);
+          setIsPreviewOpen(true);
+        }}
         onPrint={handlePrint}
+        onFinalizeQuote={() => setIsFinalizeModalOpen(true)}
+        onNewQuotation={() => {
+          setTripInfo(prev => ({
+            ...prev,
+            quoteNumber: `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+          }));
+          setActiveTab('quotation');
+        }}
         isRefreshing={isRefreshing}
         onRefresh={loadAllData}
         hotelCount={availableHotels.length}
         transportRouteCount={availableTransportRoutes.length}
         itineraryCount={itineraryDays.length}
+        quotationCount={quotationsList.length}
+        materializedCount={materializedQuotationsCount}
       />
 
       {/* Main Workspace Area */}
@@ -499,6 +692,7 @@ export default function App() {
             <TripHeader
               tripInfo={tripInfo}
               onChange={handleTripInfoChange}
+              onFinalize={() => setIsFinalizeModalOpen(true)}
             />
 
             {/* 2. Premier Hotel Costing Section */}
@@ -561,6 +755,7 @@ export default function App() {
               marginPerPax={marginPerPax}
               onMarginChange={setMarginPerPax}
               onNavigateToItinerary={() => setActiveTab('itinerary')}
+              onFinalizeQuote={() => setIsFinalizeModalOpen(true)}
             />
           </>
         )}
@@ -580,9 +775,47 @@ export default function App() {
             onDeleteTemplate={handleDeleteTemplate}
             tripInfo={tripInfo}
             onNavigateToCosting={() => setActiveTab('quotation')}
-            onPreview={() => setIsPreviewOpen(true)}
+            onPreview={() => {
+              setPreviewQuoteData(null);
+              setIsPreviewOpen(true);
+            }}
             onPrint={handlePrint}
             onSyncWithTransport={handleSyncItineraryWithTransport}
+            onFinalize={() => setIsFinalizeModalOpen(true)}
+          />
+        )}
+
+        {activeTab === 'history' && (
+          /* 8. Past Quotations History & Materialization Tracking Tab */
+          <QuotationsHistoryTab
+            quotations={quotationsList}
+            isLiveSupabase={isLiveSupabase}
+            onUpdateStatus={handleUpdateQuoteStatus}
+            onDeleteQuote={handleDeleteQuote}
+            onDelete={handleDeleteQuote}
+            onLoadQuoteIntoWorkspace={handleLoadQuoteIntoWorkspace}
+            onLoadIntoWorkspace={handleLoadQuoteIntoWorkspace}
+            onCloneQuote={handleCloneQuote}
+            onClone={handleCloneQuote}
+            onPreviewQuote={handlePreviewPastQuote}
+            onPreview={handlePreviewPastQuote}
+            onPrintQuote={handlePrint}
+            onPrint={handlePrint}
+            onRefresh={loadAllData}
+            onNavigateToNewQuote={() => {
+              setTripInfo(prev => ({
+                ...prev,
+                quoteNumber: `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+              }));
+              setActiveTab('quotation');
+            }}
+            onNewQuotation={() => {
+              setTripInfo(prev => ({
+                ...prev,
+                quoteNumber: `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+              }));
+              setActiveTab('quotation');
+            }}
           />
         )}
 
@@ -627,11 +860,30 @@ export default function App() {
         }}
       />
 
+      {/* Finalize Quotation Modal */}
+      <FinalizeQuoteModal
+        isOpen={isFinalizeModalOpen}
+        onClose={() => setIsFinalizeModalOpen(false)}
+        onSave={handleSaveQuotation}
+        tripInfo={tripInfo}
+        groupGrandTotalNpr={groupGrandTotalNpr}
+        finalAdultRateNpr={finalAdultRateNpr}
+        hotelCurrency={hotelCurrency}
+        transportCurrency={transportCurrency}
+        additionalCurrency={additionalCurrency}
+        guideCurrency={guideCurrency}
+        notes={notes}
+      />
+
       {/* Quotation Document Preview Modal */}
       <QuotationPreviewModal
         isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setPreviewQuoteData(null);
+        }}
         onPrint={handlePrint}
+        quoteData={previewQuoteData}
         tripInfo={tripInfo}
         hotelRows={hotelRows}
         availableHotels={availableHotels}
@@ -649,19 +901,28 @@ export default function App() {
 
       {/* Dedicated High-Resolution Print / PDF Document Root */}
       <PrintQuotation
-        tripInfo={tripInfo}
-        hotelRows={hotelRows}
+        tripInfo={previewQuoteData ? {
+          tripTitle: previewQuoteData.trip_title,
+          clientName: previewQuoteData.client_name,
+          preparedBy: previewQuoteData.prepared_by || tripInfo.preparedBy || 'Subhash Rajbhandari',
+          quoteNumber: previewQuoteData.quote_number,
+          quoteDate: previewQuoteData.quote_date,
+          paxAdults: previewQuoteData.pax_adults,
+          singleRoomsCount: previewQuoteData.single_rooms_count,
+          usdToNprRate: previewQuoteData.usd_to_npr_rate || 135.5
+        } : tripInfo}
+        hotelRows={previewQuoteData?.hotel_rows || hotelRows}
         availableHotels={availableHotels}
-        hotelCurrency={hotelCurrency}
-        transportItems={transportItems}
-        transportCurrency={transportCurrency}
-        additionalItems={additionalItems}
-        additionalCurrency={additionalCurrency}
-        guideItems={guideItems}
-        guideCurrency={guideCurrency}
-        itineraryDays={itineraryDays}
-        notes={notes}
-        marginPerPax={marginPerPax}
+        hotelCurrency={previewQuoteData?.hotel_currency || hotelCurrency}
+        transportItems={previewQuoteData?.transport_items || transportItems}
+        transportCurrency={previewQuoteData?.transport_currency || transportCurrency}
+        additionalItems={previewQuoteData?.additional_items || additionalItems}
+        additionalCurrency={previewQuoteData?.additional_currency || additionalCurrency}
+        guideItems={previewQuoteData?.guide_items || guideItems}
+        guideCurrency={previewQuoteData?.guide_currency || guideCurrency}
+        itineraryDays={previewQuoteData?.itinerary_days || itineraryDays}
+        notes={previewQuoteData?.notes !== undefined ? previewQuoteData.notes : notes}
+        marginPerPax={previewQuoteData?.margin_per_pax !== undefined ? previewQuoteData.margin_per_pax : marginPerPax}
       />
     </div>
   );

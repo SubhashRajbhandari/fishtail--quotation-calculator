@@ -63,26 +63,82 @@ BEFORE UPDATE ON public.hotels
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
--- 3. Quotations Table (Persistent Quote History)
+-- 3. Quotations Table (Persistent Quotations Record-Keeping & Materialized Status Management)
 CREATE TABLE IF NOT EXISTS public.quotations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     quote_number TEXT UNIQUE NOT NULL,
     client_name TEXT NOT NULL,
     trip_title TEXT NOT NULL,
-    currency TEXT NOT NULL DEFAULT 'INR', -- 'INR', 'NPR', 'USD'
+    prepared_by TEXT DEFAULT 'Subhash Rajbhandari',
+    quote_date DATE DEFAULT CURRENT_DATE,
+    
+    -- Travelers & Room specs
     pax_adults INT DEFAULT 2,
-    pax_children INT DEFAULT 0,
-    travel_dates TEXT DEFAULT '',
-    hotel_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    single_rooms_count INT DEFAULT 0,
     total_nights INT DEFAULT 0,
-    total_half_twin NUMERIC(12, 2) DEFAULT 0.00,
-    total_single_room NUMERIC(12, 2) DEFAULT 0.00,
-    grand_total NUMERIC(12, 2) DEFAULT 0.00,
-    status TEXT DEFAULT 'draft',
-    remarks TEXT DEFAULT '',
+    
+    -- Component currencies
+    hotel_currency TEXT NOT NULL DEFAULT 'INR',
+    transport_currency TEXT NOT NULL DEFAULT 'NPR',
+    additional_currency TEXT NOT NULL DEFAULT 'NPR',
+    guide_currency TEXT NOT NULL DEFAULT 'NPR',
+    usd_rate NUMERIC(10, 2) DEFAULT 135.50,
+    
+    -- Complete Itemized JSON Payload
+    hotel_rows JSONB NOT NULL DEFAULT '[]'::jsonb,
+    transport_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    additional_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    guide_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    itinerary_days JSONB NOT NULL DEFAULT '[]'::jsonb,
+    
+    -- Commercial aggregates in NPR (Base Currency)
+    margin_per_pax NUMERIC(12, 2) DEFAULT 2500.00,
+    net_package_cost_npr NUMERIC(12, 2) DEFAULT 0.00,
+    final_adult_rate_npr NUMERIC(12, 2) DEFAULT 0.00,
+    group_grand_total_npr NUMERIC(12, 2) DEFAULT 0.00,
+    
+    -- Materialized / Won status tracking ('materialized', 'pending', 'negotiation', 'lost', 'draft')
+    status TEXT NOT NULL DEFAULT 'pending',
+    materialized_at TIMESTAMPTZ,
+    notes TEXT DEFAULT '',
+    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure backwards-compatible column additions if table already exists
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS quote_date DATE DEFAULT CURRENT_DATE;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS prepared_by TEXT DEFAULT 'Subhash Rajbhandari';
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS single_rooms_count INT DEFAULT 0;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS hotel_currency TEXT DEFAULT 'INR';
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS transport_currency TEXT DEFAULT 'NPR';
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS additional_currency TEXT DEFAULT 'NPR';
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS guide_currency TEXT DEFAULT 'NPR';
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS usd_rate NUMERIC(10, 2) DEFAULT 135.50;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS hotel_rows JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS transport_items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS additional_items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS guide_items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS itinerary_days JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS margin_per_pax NUMERIC(12, 2) DEFAULT 2500.00;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS net_package_cost_npr NUMERIC(12, 2) DEFAULT 0.00;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS final_adult_rate_npr NUMERIC(12, 2) DEFAULT 0.00;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS group_grand_total_npr NUMERIC(12, 2) DEFAULT 0.00;
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS materialized_at TIMESTAMPTZ;
+
+-- Indexes for fast searching and status filtering
+CREATE INDEX IF NOT EXISTS idx_quotations_quote_number ON public.quotations(quote_number);
+CREATE INDEX IF NOT EXISTS idx_quotations_client_name ON public.quotations(client_name);
+CREATE INDEX IF NOT EXISTS idx_quotations_prepared_by ON public.quotations(prepared_by);
+CREATE INDEX IF NOT EXISTS idx_quotations_status ON public.quotations(status);
+CREATE INDEX IF NOT EXISTS idx_quotations_created_at ON public.quotations(created_at DESC);
+
+-- Auto-update trigger for quotations
+DROP TRIGGER IF EXISTS trigger_update_quotations_timestamp ON public.quotations;
+CREATE TRIGGER trigger_update_quotations_timestamp
+BEFORE UPDATE ON public.quotations
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
 -- 4. Row Level Security (RLS) Policies
 ALTER TABLE public.hotels ENABLE ROW LEVEL SECURITY;
