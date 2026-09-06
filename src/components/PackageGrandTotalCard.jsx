@@ -13,7 +13,8 @@ import {
   FileCheck2,
   ArrowRight,
   MapPin,
-  Calendar
+  Calendar,
+  BookmarkCheck
 } from 'lucide-react';
 
 export default function PackageGrandTotalCard({
@@ -31,7 +32,8 @@ export default function PackageGrandTotalCard({
   onNotesChange,
   marginPerPax,
   onMarginChange,
-  onNavigateToItinerary
+  onNavigateToItinerary,
+  onFinalizeQuote
 }) {
   const getCurrencySymbol = (curr) => {
     switch (curr) {
@@ -332,52 +334,76 @@ export default function PackageGrandTotalCard({
             />
           </div>
 
-          {/* Step 2: Next Itinerary Planning Action Banner */}
-          {onNavigateToItinerary && (
-            <div style={{ 
-              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
-              borderRadius: 'var(--radius-md)', 
-              padding: '1.25rem 1.5rem', 
-              border: '1px solid #334155',
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              flexWrap: 'wrap', 
-              gap: '1rem' 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ background: 'var(--gold-gradient)', color: '#000', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <MapPin size={22} />
+          {/* Step 2: Next Actions Banner */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
+            borderRadius: 'var(--radius-md)', 
+            padding: '1.25rem 1.5rem', 
+            border: '1px solid #334155',
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            flexWrap: 'wrap', 
+            gap: '1rem' 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div style={{ background: 'var(--gold-gradient)', color: '#000', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MapPin size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
+                  Finished with Costing & Margins?
                 </div>
-                <div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
-                    Finished with Costing & Margins?
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.15rem' }}>
-                    Proceed to <strong>Itinerary Planning</strong> to review, customize, and finalize day-by-day schedules mapped to your transport sectors.
-                  </div>
+                <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.15rem' }}>
+                  Finalize and store the record with a tag (Materialized / Pending) or customize the day-by-day Itinerary schedule.
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={onNavigateToItinerary}
-                className="btn btn-accent"
-                style={{ 
-                  padding: '0.75rem 1.75rem', 
-                  fontSize: '0.95rem', 
-                  fontWeight: 800, 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.4)'
-                }}
-              >
-                <span>Proceed to Itinerary Planning (Step 2)</span>
-                <ArrowRight size={18} />
-              </button>
             </div>
-          )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {onFinalizeQuote && (
+                <button
+                  type="button"
+                  onClick={onFinalizeQuote}
+                  className="btn btn-primary"
+                  style={{ 
+                    padding: '0.75rem 1.35rem', 
+                    fontSize: '0.95rem', 
+                    fontWeight: 800, 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                    border: '1px solid #10b981',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)'
+                  }}
+                >
+                  <BookmarkCheck size={18} />
+                  <span>Finalize & Record Quote</span>
+                </button>
+              )}
+
+              {onNavigateToItinerary && (
+                <button
+                  type="button"
+                  onClick={onNavigateToItinerary}
+                  className="btn btn-accent"
+                  style={{ 
+                    padding: '0.75rem 1.5rem', 
+                    fontSize: '0.95rem', 
+                    fontWeight: 800, 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.4)'
+                  }}
+                >
+                  <span>Itinerary Planner</span>
+                  <ArrowRight size={18} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

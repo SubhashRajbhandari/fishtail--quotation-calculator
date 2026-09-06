@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import { INITIAL_HOTELS, MASTER_TRANSPORT_ROUTES, MASTER_ITINERARY_TEMPLATES } from './mockData';
+import { INITIAL_HOTELS, MASTER_TRANSPORT_ROUTES, MASTER_ITINERARY_TEMPLATES, SAMPLE_PAST_QUOTATIONS } from './mockData';
 
 const LOCAL_STORAGE_KEY_URL = 'fishtail_supabase_url';
 const LOCAL_STORAGE_KEY_KEY = 'fishtail_supabase_anon_key';
 const LOCAL_STORAGE_HOTELS_BACKUP = 'fishtail_local_hotels';
 const LOCAL_STORAGE_TRANSPORT_BACKUP = 'fishtail_local_transport_routes';
 const LOCAL_STORAGE_ITINERARY_TEMPLATES_BACKUP = 'fishtail_local_itinerary_templates';
+const LOCAL_STORAGE_QUOTATIONS_BACKUP = 'fishtail_local_quotations';
 
 // Retrieve credentials
 export function getStoredConfig() {
@@ -56,30 +57,34 @@ export async function testConnection(url, key) {
     const results = {
       hotels: false,
       transport_routes: false,
-      itinerary_templates: false
+      itinerary_templates: false,
+      quotations: false
     };
     
-    const [hRes, tRes, iRes] = await Promise.all([
+    const [hRes, tRes, iRes, qRes] = await Promise.all([
       testClient.from('hotels').select('count', { count: 'exact', head: true }),
       testClient.from('transport_routes').select('count', { count: 'exact', head: true }),
-      testClient.from('itinerary_templates').select('count', { count: 'exact', head: true })
+      testClient.from('itinerary_templates').select('count', { count: 'exact', head: true }),
+      testClient.from('quotations').select('count', { count: 'exact', head: true })
     ]);
 
     results.hotels = !hRes.error;
     results.transport_routes = !tRes.error;
     results.itinerary_templates = !iRes.error;
+    results.quotations = !qRes.error;
 
-    if (results.hotels && results.transport_routes && results.itinerary_templates) {
+    if (results.hotels && results.transport_routes && results.itinerary_templates && results.quotations) {
       return { 
         success: true, 
-        message: 'Connected successfully to Supabase! All tables (hotels, transport_routes, itinerary_templates) verified and live.',
+        message: 'Connected successfully to Supabase! All tables (hotels, transport_routes, itinerary_templates, quotations) verified and live.',
         tables: results
       };
-    } else if (results.hotels || results.transport_routes || results.itinerary_templates) {
+    } else if (results.hotels || results.transport_routes || results.itinerary_templates || results.quotations) {
       const missing = [];
       if (!results.hotels) missing.push('hotels');
       if (!results.transport_routes) missing.push('transport_routes');
       if (!results.itinerary_templates) missing.push('itinerary_templates');
+      if (!results.quotations) missing.push('quotations');
       return {
         success: true,
         partial: true,
@@ -106,7 +111,8 @@ export async function seedAllSupabaseData() {
   const results = {
     hotels: false,
     transportRoutes: false,
-    itineraryTemplates: false
+    itineraryTemplates: false,
+    quotations: false
   };
 
   try {
@@ -128,6 +134,13 @@ export async function seedAllSupabaseData() {
     results.itineraryTemplates = true;
   } catch (err) {
     console.warn('Itinerary templates seed warning:', err.message);
+  }
+
+  try {
+    await seedSupabaseQuotations();
+    results.quotations = true;
+  } catch (err) {
+    console.warn('Quotations seed warning:', err.message);
   }
 
   return results;
@@ -655,5 +668,221 @@ export async function seedSupabaseItineraryTemplates() {
   if (error) throw error;
   return data;
 }
+
+// ==========================================
+// 4. FINALIZED QUOTATIONS LOCAL STORAGE & SERVICES
+// ==========================================
+function getLocalQuotations() {
+  const stored = localStorage.getItem(LOCAL_STORAGE_QUOTATIONS_BACKUP);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      // ignore parse error
+    }
+  }
+  localStorage.setItem(LOCAL_STORAGE_QUOTATIONS_BACKUP, JSON.stringify(SAMPLE_PAST_QUOTATIONS));
+  return SAMPLE_PAST_QUOTATIONS;
+}
+
+function saveLocalQuotations(quotes) {
+  localStorage.setItem(LOCAL_STORAGE_QUOTATIONS_BACKUP, JSON.stringify(quotes));
+}
+
+// Format sanitized quotation payload
+export function sanitizeQuotationPayload(quoteData) {
+  const status = (quoteData.status || 'pending').toLowerCase();
+  const isMaterialized = status === 'materialized';
+
+  return {
+    quote_number: String(quoteData.quote_number || `FT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`),
+    client_name: String(quoteData.client_name || 'Direct Guest / Partner Agency'),
+    trip_title: String(quoteData.trip_title || 'Nepal Tour Package'),
+    prepared_by: String(quoteData.prepared_by || 'Subhash Rajbhandari'),
+    quote_date: quoteData.quote_date || new Date().toISOString().split('T')[0],
+
+    pax_adults: Number(quoteData.pax_adults) || 2,
+    single_rooms_count: Number(quoteData.single_rooms_count) || 0,
+    total_nights: Number(quoteData.total_nights) || 0,
+
+    hotel_currency: String(quoteData.hotel_currency || 'INR'),
+    transport_currency: String(quoteData.transport_currency || 'NPR'),
+    additional_currency: String(quoteData.additional_currency || 'NPR'),
+    guide_currency: String(quoteData.guide_currency || 'NPR'),
+    usd_rate: Number(quoteData.usd_rate) || 135.5,
+
+    hotel_rows: Array.isArray(quoteData.hotel_rows) ? quoteData.hotel_rows : [],
+    transport_items: Array.isArray(quoteData.transport_items) ? quoteData.transport_items : [],
+    additional_items: Array.isArray(quoteData.additional_items) ? quoteData.additional_items : [],
+    guide_items: Array.isArray(quoteData.guide_items) ? quoteData.guide_items : [],
+    itinerary_days: Array.isArray(quoteData.itinerary_days) ? quoteData.itinerary_days : [],
+
+    margin_per_pax: Number(quoteData.margin_per_pax) || 0,
+    net_package_cost_npr: Number(quoteData.net_package_cost_npr) || 0,
+    final_adult_rate_npr: Number(quoteData.final_adult_rate_npr) || 0,
+    group_grand_total_npr: Number(quoteData.group_grand_total_npr) || 0,
+
+    status: status,
+    materialized_at: isMaterialized ? (quoteData.materialized_at || new Date().toISOString()) : null,
+    notes: String(quoteData.notes || '')
+  };
+}
+
+// Fetch all past quotations
+export async function fetchQuotationsService() {
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('quotations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        return { data, isLive: true, error: null };
+      }
+      if (error) {
+        console.warn('Supabase fetch quotations error, using local fallback:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase quotations network error, using local fallback:', err);
+    }
+  }
+
+  return { data: getLocalQuotations(), isLive: false, error: null };
+}
+
+// Save or Update finalized quotation
+export async function saveQuotationService(quoteData) {
+  const client = getSupabaseClient();
+  const payload = sanitizeQuotationPayload(quoteData);
+  const quoteId = quoteData.id;
+
+  // Check if we have an existing Supabase record with UUID
+  const isExistingUuid = quoteId && !String(quoteId).startsWith('q-sample-') && !String(quoteId).startsWith('q-loc-');
+
+  if (client) {
+    try {
+      if (isExistingUuid) {
+        const { data, error } = await client
+          .from('quotations')
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq('id', quoteId)
+          .select()
+          .single();
+        if (!error && data) {
+          // Sync local storage copy too
+          const localList = getLocalQuotations();
+          const updatedLocal = localList.map(q => (q.id === quoteId || q.quote_number === data.quote_number) ? data : q);
+          saveLocalQuotations(updatedLocal);
+          return { data, isLive: true, error: null };
+        }
+      } else {
+        const { data, error } = await client
+          .from('quotations')
+          .insert([payload])
+          .select()
+          .single();
+        if (!error && data) {
+          const localList = getLocalQuotations();
+          saveLocalQuotations([data, ...localList]);
+          return { data, isLive: true, error: null };
+        }
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.warn('Supabase save quotation failed, saving locally:', err.message);
+    }
+  }
+
+  // Local storage fallback
+  const localList = getLocalQuotations();
+  const createdLocal = {
+    ...payload,
+    id: quoteId || 'q-loc-' + Date.now(),
+    created_at: quoteData.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  let updatedList;
+  const existingIndex = localList.findIndex(q => q.id === createdLocal.id || q.quote_number === createdLocal.quote_number);
+  if (existingIndex >= 0) {
+    updatedList = [...localList];
+    updatedList[existingIndex] = createdLocal;
+  } else {
+    updatedList = [createdLocal, ...localList];
+  }
+
+  saveLocalQuotations(updatedList);
+  return { data: createdLocal, isLive: false, error: null };
+}
+
+// Update quotation status tag directly (e.g., 'materialized', 'pending', 'negotiation', 'lost', 'draft')
+export async function updateQuotationStatusService(id, newStatus, optionalNotes = null) {
+  const client = getSupabaseClient();
+  const statusNormalized = (newStatus || 'pending').toLowerCase();
+  const isMaterialized = statusNormalized === 'materialized';
+  const statusPayload = {
+    status: statusNormalized,
+    materialized_at: isMaterialized ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString()
+  };
+  if (optionalNotes !== null) {
+    statusPayload.notes = optionalNotes;
+  }
+
+  if (client && !String(id).startsWith('q-sample-') && !String(id).startsWith('q-loc-')) {
+    try {
+      const { data, error } = await client
+        .from('quotations')
+        .update(statusPayload)
+        .eq('id', id)
+        .select()
+        .single();
+      if (!error && data) {
+        const localList = getLocalQuotations();
+        const updatedLocal = localList.map(q => q.id === id ? { ...q, ...statusPayload } : q);
+        saveLocalQuotations(updatedLocal);
+        return { data, isLive: true, error: null };
+      }
+    } catch (err) {
+      console.warn('Supabase status update failed:', err);
+    }
+  }
+
+  const localList = getLocalQuotations();
+  const updatedList = localList.map(q => q.id === id ? { ...q, ...statusPayload } : q);
+  saveLocalQuotations(updatedList);
+  return { data: { id, ...statusPayload }, isLive: false, error: null };
+}
+
+// Delete quotation record
+export async function deleteQuotationService(id) {
+  const client = getSupabaseClient();
+  if (client && !String(id).startsWith('q-sample-') && !String(id).startsWith('q-loc-')) {
+    try {
+      await client.from('quotations').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Supabase quotation delete failed:', err);
+    }
+  }
+
+  const localList = getLocalQuotations();
+  const updatedList = localList.filter(q => q.id !== id);
+  saveLocalQuotations(updatedList);
+  return { success: true };
+}
+
+// Seed initial sample past quotations into Supabase
+export async function seedSupabaseQuotations() {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase client not connected. Configure URL & Key first.');
+
+  const seedPayload = SAMPLE_PAST_QUOTATIONS.map(({ id, ...rest }) => sanitizeQuotationPayload(rest));
+  const { data, error } = await client.from('quotations').insert(seedPayload).select();
+  if (error) throw error;
+  return data;
+}
+
 
 
